@@ -1,0 +1,11 @@
+Diffusers 合:Inversion 
+ Generative ODE
+. Initial latent: Gaussian noise x1 ~ Pnoise
+. Timesteps: 1 > tn > ... > t > 0
+ Steps: Xtn-1
+=xt +(tn-1 -tn)v(xt;tn)
+Inverse ODE:
+. Initial latent: Data xo ~ Pdata
+O< 4<···<N< I:sdaisaw!·
+= xt, - (tn - tn+1)ve(xt,; tn) (hardtofixthe code)
+15

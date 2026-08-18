@@ -1,0 +1,15 @@
+Recap; ODE Solver
+. We construct the ODE from the data distribution to a known distribution.
+(e.g., Gaussian Distribution)
+ Even with the Rectified Flows,
+U(2t,t)
+the generated trajectories are slightly curved.
+s  e   a u   u  e
+· ODE Solver: A simulator tracing trajectories.
+· E.g., Euler solver: Discretize the steps and move straight
+xs=x+(s-t)ve(x;t)
+. E.g., Heun solver: Calibrate the discretization error of Eluer solver
+S-1
+[Ve(x;t) + ve(xs; s)]
++x=x
+27

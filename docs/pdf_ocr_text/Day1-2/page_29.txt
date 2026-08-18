@@ -1,0 +1,40 @@
+Ixllo号
+Diffusers
+合:RF-Inversion 
+Controlled ODE Generator
+6. Reconstruction test
+controlled scheduler=ControlledoDE.from confiq(BASE SCHEDULERCONFIG)
+controlled_scheduler.set(image_latent，tau=0.7，6
+eta=0.9)
+pipeline.scheduler=controlled_scheduler
+Set reference image
+reconstructed_rf = pipeline(
+prompt=SOURCE_PROMPT,
+num_inference_steps=NUM_STEPS,
+HELLO
+height=HEIGHT,
+width=WIDTH,
+WORD
+guidance_scale=7.0,
+generator=torch.Generator(device=DEVICE).manual_seed(EDIT_SEED),
+latents=inverted_rf,
+Sample from seed 1
+).images [0]
+edited_rf = pipeline(
+prompt=EDIT_PROMPT,
+num_inference_steps=NUM_STEPS,
+height=HEIGHT,
+width=WIDTH,
+guidance_scale=7.0,
+HELLO
+HELLO
+generator=torch.Generator(device=DEVICE).manual_seed(EDIT_SEED),
+latents=inverted_rf,
+).images[0]
+WORD
+WORD
+rf_mse, rf_psnr = mse_and_psnr(source_image, reconstructed_rf)
+Reconstructed
+Edited
+print("original/ RF reconstruction/ RF edit")
+display(source_image, reconstructed_rf， edited_rf)

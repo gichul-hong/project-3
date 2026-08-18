@@ -1,0 +1,42 @@
+Preparation
+Page#1
+Page#2
+nterprise
+Pricing
+3.
++Createnewtoken
+Profile
+noahkim-snu
+Notifications
+)ermissions.
+Inbox(0)
+y.
++ New Model
+NewDataset
+NewSpace
+Page#3
+New Collection
+Token type
+Create a new access token
+Fine-gralted
+Read
+Write
+Create organization
+This cannot be changed aftertoken creation.
+Usage Quota
+5.
+Token name
+PrivateStorage
+0 GB/100 GB
+Read-public-repo
+Zero GPU
+0/4 min
+Thistoken hasread-only accessto allyour andyour orgs resources and canmake
+Inference Usage
+$0.00 / $0.10
+requests andcommenton discussions.
+GetHuggingFacePRO
+Create token
+Settings
+Access Tokens
+15

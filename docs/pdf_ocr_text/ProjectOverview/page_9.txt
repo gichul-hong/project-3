@@ -1,0 +1,25 @@
+Settings
+ From the CustomConcept101 Dataset[link], we only consider ten subejcts
+For each subject, customize the diffusion models and generate ten
+images of the provided prompts (check prompt.zip)
+import torch.nn.functional as F
+· Each subject uses differe
+Representative Image
+with torch.no qrad():
+· We will measure the simil
+representative = Image.open("5.png").convert("RGB").resize((256, 256))
+images = [image1, image2]
+Image-Prompt pair
+text_embedding = model.get_text_features(
+**processor(text=prompts, return_tensors="pt", padding=True)
+image_ref = model.get_image_features(
+Make Embeddings
+**processor(images=representative, return_tensors="pt")
+image_gen = model.get_image_features(
+**processor(images=images, return_tensors="pt")
+t2i_sim = F.cosine_similarity(text_embedding, image_ref)
+i2i_sim = F.cosine_similarity(image_ref, image_gen)
+Measure Similarity
+print(f"Text-to-Image Score: {t2i_sim.mean().item()}")
+10
+print(f"Image-to-Image Score: {i2i_sim.mean().item()}")

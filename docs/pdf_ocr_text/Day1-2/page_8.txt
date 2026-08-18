@@ -1,0 +1,16 @@
+Discretization Error
+Issue: discretization error of the ODE solver
+Numerical ODE: discretize the interval
+= xt, - (tn - tn-1)ve(xt,; tn); error O(△t)²)
+[ve(xtnit) + ve(x,-1; tn-1)]; error O(△t)3)
+Heun solver: v =
+2
+ RF-Solver: Similar to the Heun, approximate 2nd-order Taylor expansion
+; error O((△t)3)
+=xt,-(tn-tn-1)
+—tn-1)v'(xt,tn)
++
+1)
+Vo(xt;tn)-Vo(xn-;tn-1)
+v(xt,tn)
+tn-tn-1

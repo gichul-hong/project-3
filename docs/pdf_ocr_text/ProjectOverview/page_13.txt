@@ -1,0 +1,21 @@
+Sample: Euler Inversion
+with torch.no_grad():
+representative = Image.open("5.png").convert("RGB").resize((256, 256))
+Prepare samples
+prompts = ["a photo of a {}.", "The {}, surrounded by towering skyscrapers."]
+images = [image1, image2]
+text_embedding = model.get_text_features(
+Obtain CLIP Embedding
+**processor(text=prompts, return_tensors="pt", padding=True)
+image_ref = model.get_image_features(
+**processor(images=representative, return_tensors="pt")
+image_gen = model.get_image_features(
+**processor(images=images, return_tensors="pt")
+t2i_sim = F.cosine_similarity(text_embedding, image_ref)
+i2i_sim = F.cosine_similarity(image_ref, image_gen)
+Measure Similarity
+print(f"Text-to-Image Score: {t2i_sim.mean().item()}")
+print(f"Image-to-Image Score: {i2i_sim.mean().item()}")
+Results
+Text-to-Image Sc0re: 0.184671550989151，Image-to-Image Sc0re:0.6936930418014526
+14

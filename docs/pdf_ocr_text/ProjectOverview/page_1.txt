@@ -1,0 +1,7 @@
+Our Goal
+From the given 3~15 reference images,
+e.g., Reference Images:
+And generated images:
+A action figure, surrounded by towering skyscrapers
+A action figure in time square
+2

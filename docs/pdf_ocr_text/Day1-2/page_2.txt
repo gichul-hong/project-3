@@ -1,0 +1,6 @@
+Inversion
+U(2t, t)
+If we can find the latent,
+then we can manipulate it to edit the images
+*Photograph of a puppy on the grass → cat
+(1) Original (2) Latent (3) Re-generated (4) Edited

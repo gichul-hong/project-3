@@ -1,0 +1,6 @@
+Settings
+ From the CustomConcept1o1 Dataset[link], we only consider ten subejcts
+person_3
+pet_cat_5
+wearable_jacket1
+4

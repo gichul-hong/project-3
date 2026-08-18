@@ -1,0 +1,6 @@
+Settings
+From the CustomConcept101 Dataset[link], we only consider ten subejcts
+transport_tank
+lugage_backpack1
+scene_waterfall
+5

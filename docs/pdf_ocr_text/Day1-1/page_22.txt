@@ -1,0 +1,27 @@
+Diffusers: Classifier-Free Guidance
+ You can replace the guidance scale parameters
+(in 0rder 1.0, 3.0, 5.0, 7.0, 15.0)
+image = pipeline(
+prompt="a photo of a cat holding a sign that says hello
+negative_prompt="
+FYl. O.O = Unconditional Generation
+inierence_steps=z8
+height=512,
+FYl. 1.0 = Conditional Generation
+width=512,
+Update scale parameters
+guidance_scale=7.0,
+FYl. >1.0 = CFG Guidance
+generator=torch.Generator() .manual_seed(0)
+).images [0]
+HELO
+hello
+Hello
+WORLP
+hello
+HELL
+world
+world
+world
+world
+23

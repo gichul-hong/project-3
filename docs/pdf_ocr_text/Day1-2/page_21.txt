@@ -1,0 +1,37 @@
+合：Inversion 
+Diffusers
+Sample from seed 1
+5. Editing
+Edited 1
+Edited 1
+edited_eu
+ ou  a u  u    o ud =
+prompt
+num_infference_steps-NUM_STEPS,
+height=HEIGHT,
+width=WIDTH,
+HELLO
+guidance_scale=7.0,
+HELLO
+generator=torch.Generator(device=DEVICE).manual_seed(GENERATION_SEED),
+latents=inverted_euler,
+WORD
+).images [0]
+WORD
+edited_euler2
+Edited 2
+Reconstructed
+edited_euler2=pipeline(
+t="A photo of a cat wearing sunglasses.",
+prompt:
+Edited 2
+num_inference_steps=NUM_STEPS,
+height=HEIGHT,
+width=WIDTH,
+guidance_scale=7.0,
+generator=torch.Generator(device=DEVICE).manual_seed(GENERATION_SEED),
+latents=inverted_euler,
+).images[0]
+HELLO
+edited_euler2
+WORD

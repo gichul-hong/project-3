@@ -1,0 +1,29 @@
+合：RF-Inversion号O|□l
+Diffusers
+Implement a step function
+def step(
+self,
+model_output,
+timestep,
+sample,
+*args,
+return_dict=True,
+**kwargs,
+if self.step_index is None:
+Copied from Euler solver
+self._init_step_index(timestep)
+sample = sample.to(torch.float32)
+sigma = self.sigmas[self.step_index].to(sample.device)
+sigma_next = self.sigmas[self.step_index + 1].to(sample.device)
+Controlled ODE
+conditional_velocity = self.controller(sample，sigma).to(model_output.dtype)
+eta =self.etaifsigma.item(）> self.tau else 0.0
+controlled_velocity = model_output + eta *(conditional_velocity - model_output)
+prev_sample = sample +（sigma_next - sigma）* controlled_velocity
+prev_sample = prev_sample.to(model_output.dtype)
+self._step_index += 1
+Copied from Euler solver
+if not return_dict:
+return (prev_sample,)
+27
+returnFlowMatchEulerDiscreteSchedulerOutput(prev_sample=prev_sample)

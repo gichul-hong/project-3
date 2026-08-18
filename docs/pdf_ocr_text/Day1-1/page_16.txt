@@ -1,0 +1,26 @@
+Diffusers: Stable Diffusion3 Image Generation
+Runtime ->T4 GPU or A1OO GPU ( )
+△Day1_diffusers_tutorial.ipynb☆
+2
+十▲正十品
+/Ctrl+F9
+lo
+/Ctrl+F8
+8/Ctrl+Enter
+1. Huggir
+8/Ctrl+Shift+Enter
+/Ctrl+F10
+from hugg
+login()
+/Ctrl+M1
+/Ctrl+M.
+2. Import
+品品
+import tc
+from diff
+ne
+model_id
+-mec
+pipeline
+trai
+17

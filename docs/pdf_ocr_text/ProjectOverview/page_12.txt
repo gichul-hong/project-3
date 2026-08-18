@@ -1,0 +1,30 @@
+Sample: Euler Inversion
+pipeline.scheduler = FlowMatchEulerDiscreteScheduler.from_config(
+lmage#1
+pipeline.scheduler.config
+Generate image with prompt#1
+image1 = pipeline(
+# prompt#1
+prompt=
+photoofaharryporter'
+num_inference_steps=28,
+height=256,
+width=256,
+guidance_scale=2.0,
+generator=torch.Generator().manual_seed(0),
+latents=inverted
+).images[0]
+Generate image with prompt#2
+Image#2
+image2 = pipeline(
+="The harry porter, surrounded by towering skyscrapers",
+prompt
+#prompt#2
+num_inference_steps=28,
+height=256,
+width=256,
+guidance_scale=2.0,
+generator=torch.Generator().manual_seed(0),
+latents=inverted
+).images[0]
+13

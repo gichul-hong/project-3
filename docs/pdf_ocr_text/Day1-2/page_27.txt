@@ -1,0 +1,31 @@
+合：RF-Inversion号O|□||
+Diffusers
+Time-reversal of Controlled ODE
+class ControlledoDEInversion(ControlledoDE):
+""Sampled prior  conditional velocity  inversion scheduler.""
+Default hyperparameters
+def set(self，reference: torch.Tensor，tau: float = 0.0，eta: float = 0.5):
+return super().set(reference,tau=tau，eta=eta)
+def controller(self， sample: torch.Tensor, sigma: torch.Tensor):
+reference = self.reference.to(device=sample.device, dtype=sample.dtype)
+return （reference - sample）/(1.0 -sigma).clamp_min(1e-6)
+Conditional Velocity
+def set_timesteps(
+self,
+num_inference_steps=None,
+device=None,
+sigmas=None,
+mu=None,
+timesteps=None,
+super().set_timesteps(
+num_inference_steps=num_inference_steps,
+device=device,
+sigmas=sigmas,
+'nw=nw
+timesteps=timesteps,
+Time Reversal
+self.timesteps = torch.flip(self.timesteps，dims=(0,))
+self.sigmas = torch.flip(self.sigmas, dims=(0,))
+self._step_index = None
+28
+self._begin_index = None

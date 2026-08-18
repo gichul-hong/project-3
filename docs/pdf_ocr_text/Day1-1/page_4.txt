@@ -1,0 +1,7 @@
+Recap; Flow Matching & Rectified Flows
+· Suppose the ODE based on empirical observations Xo ~ πo, X, ~ π1:
+dZt = u(Zt, t)dt, x1 = xo +
+(xt,t)dt
+Target Distribution
+SourceDistribution
+Time

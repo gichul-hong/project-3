@@ -1,0 +1,22 @@
+Discretization Error
+ Issue: discretization error of the ODE solver
+Ideal case: operate the integral directly
+MSE
+RFReconstruction
+0.43
+[-ve(x; t)]dt
+xo = x1 +
+SourceImage
+OursReconstruction
+ Numerical ODE(Euler): discretize the interval
+N
+7
+x = x1 +
+[-Ve(x,;tn)]△t
+0.02
+TimeSteps
+t25
+to
+i=1
+ Discretization Error: xo - xo = o((△t)²); △t = 1/N
+The error becomes larger with the square of the sampling steps

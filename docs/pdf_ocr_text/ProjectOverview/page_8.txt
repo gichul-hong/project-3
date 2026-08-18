@@ -1,0 +1,12 @@
+Settings
+· From the CustomConcept1o1 Dataset[link], we only consider ten subejcts
+For each subject, customize the diffusion models and generate ten
+images of the provided prompts (check prompt.zip)
+· Each subject uses different prompts
+· We will measure the similarity with openai/CLlP-B/32[link:huggingface]
+from transformers import CLIPProcessor, CLIPModel
+# For measuring similarity
+Loading Model
+model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+9

@@ -1,0 +1,20 @@
+Diffusers: Stable Diffusion3 Image Generation
+ Load the SD3 model to the GPU
+· If you use a >8GB VRAM GPU
+import torch
+, you can remove red lines
+from diffusers import StableDiffusion3Pipeline
+model_id = "stabilityai/stable-diffusion-3.5-medium"
+pipeline = StableDiffusion3Pipeline.from_pretrained(
+FYI. CPU Offload
+model id,
+text_encoder_3=None,
+tokenizer_3=None,
+: Loading models to the GPU
+T5 x
+torch_dtype=torch.float16,
+only when it is in use.
+oipeline.enable_model_cpu_offload()
+FYl. Text encoder3: Disable T5 XXL
+(use only other text encoders)
+19

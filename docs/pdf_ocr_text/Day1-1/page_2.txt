@@ -1,0 +1,19 @@
+Goal of Exercise
+Baseline Image (Euler solver, 28-steps, CFG=7.0)
+Hello
+world
+Various generation strategies
++100-steps
++CFG=1.0
++4-steps
+HELO
+HHELIO
+Hello
+hello
+hello
+WORLP
+world
+world
+world
++Heun
++CFG=5.0

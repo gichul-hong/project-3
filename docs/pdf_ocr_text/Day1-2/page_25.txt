@@ -1,0 +1,14 @@
+合：RF-Inversion号Ol□||
+Diffusers
+1. Inherit Euler solver
+3. Add a method controller: Conditional vector from the reference
+class ControlledoDE(FlowMatchEulerDiscreteScheduler):
+""latent  conditional velocityscheduler."
+self.reference=reference
+self.tau = float(tau)
+self.eta = float(eta)
+return self
+def controller(self, sample: torch.Tensor, sigma: torch.Tensor):
+reference = self.reference.to(device=sample.device, dtype=sample.dtype)
+return (sample - reference) / sigma.clamp_min(1e-6)
+26

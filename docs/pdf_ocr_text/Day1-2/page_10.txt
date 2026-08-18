@@ -1,0 +1,13 @@
+Recap: Diffusers
+It simplifies (1) Model Download, (2) Loading, and (3) Inference/Generation
+Composition of (1) Preprocessor (tokenizer), (2) Model, referred it as Pipeline
+· Diffusers: Python libraries support various Diffusion Generative Models
+VLLM
+TGI
+MLX
+LLaMAG+
+T9S.
+aIowpue>
+<aIowpue
+Transformers
+11

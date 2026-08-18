@@ -1,0 +1,7 @@
+With your own data
+Example
+Mydata
+RF-Edit
+RF-Edit2
+Prompt 1: "A photo of a toy duck sitting on a box on the table.
+Prompt 2: "A photo of a duck wearing sunglasses."

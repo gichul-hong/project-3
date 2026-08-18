@@ -1,0 +1,10 @@
+Recap; Flow Matching & Rectified Flows
+· Suppose the ODE based on empirical observations Xo ~ πo, X, ~ π1:
+dZt = u(Zt, t)dt, x1 = xo +
+t)dt
+O
+Iu ~ lx ot °r ~ 0x suiod ayt anow ot 3ao aeudoidde ue uieal ot s! jeoh ayl ·
+ Proposal: Assume linear interpolation
+v(Xt, t) = X1 - Xo with Xt = tX1 + (1 - t)X
+· Since velocity's fitting requires X1,
+Learned velocity can be expressed as a path being casualized

@@ -1,0 +1,5 @@
+Goal ofExercise
+1. Overview: Diffusers
+2. Overview: Stable Diffusion3
+3.Diffusers 人 :Stable Diffusion3 O|口| , Scheduler 刘l, CFG
+2

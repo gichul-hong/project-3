@@ -1,0 +1,18 @@
+坐合：Inversion
+Diffusers
+3.2 Operate inversion
+3-2. Euler inversion 
+guidance_scale=1.0,output_type="latent"L|l.
+pipeline.scheduler = EulerInversion.from_config(BASE_SCHEDULER_CoNFIG)
+inverted_euler = pipeline(
+prompt=SOURCE_PROMPT,
+num_inference_steps=NUM_STEPS,
+height=HEIGHT,
+width=WIDTH,
+guidance_scale=1.0，# 否：inversionolACFG 芒.
+latents=image_latent,
+output_type="latent",
+). images.detach()
+SD3:100%
+28/28[00:04<00:00,10.01it/s]
+20

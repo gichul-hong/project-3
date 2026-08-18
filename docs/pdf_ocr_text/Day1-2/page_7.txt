@@ -1,0 +1,9 @@
+Discretization Error
+· Issue: discretization error of the ODE solver
+Numerical ODE(Euler solver): discretize the interval
+=xt, - (tn - tn-1)vg(xt,; tn); error O((△t)²)
+Xtn-1
+(e(1V)0 10ue :[(1-u :-y)a + (rx)a]
+Heun solver: v = -
+2
+8

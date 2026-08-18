@@ -1,0 +1,37 @@
+合：Inversion
+Diffusers
+3.3 Reconstruction & Editing
+pipeline.scheduler = FlowMatchEulerDiscreteScheduler.from_config(BASE_SCHEDULER_CoNFIG)
+reconstructed_euler=pipeline(
+prompt=SOURCE_PROMPT,
+num_inference_steps=NUM_STEPS,
+height=HEIGHT,
+width=WIDTH,
+HELLO
+HELLO
+guidance_scale=7.0,
+qenerator=torch.Generator(device=DEVICE).manual_seed(GENERATION_SEED),
+WORD
+WORD
+latents=inverted_euler,
+Start from inverted latent
+).images[0]
+Sample from seed 1
+Reconstructed
+edited_euler = pipeline(
+Edited prompt
+prompt
+=EDIT_PROMPT,
+num_inference_steps=NUM_STEPS,
+height=HEIGHT,
+width=WIDTH,
+guidance_scale=7.0,
+generator=torch.Generator(device=DEVICE).manual_seed(GENERATIoN_SEED),
+latents=inverted_euler,
+HELLO
+).images [0]
+WORLD
+print("original/ Euler reconstruction / Euler edit")
+display(source_image, reconstructed_euler, edited_euler)
+Edited
+21

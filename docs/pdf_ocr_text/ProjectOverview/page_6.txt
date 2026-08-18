@@ -1,0 +1,25 @@
+Settings
+ From the CustomConcept1o1 Dataset[link], we only consider ten subejcts
+ For each subject, customize the diffusion models and generate ten
+images of the provided prompts (check prompt.zip)
+Each subject uses different prompts
+photo of a {}.
+·E.g., action_figure2
+The {}, surrounded by towering skyscrapers.
+2
+The {} stands atop a snowy mountain peak, overlooking a vast icy landscape.
+3
+In a lush forest stands {}.
+4
+{} in times square.
+5
+{} on a sandy beach, with waves in the background.
+6
+{} riding a motorcycle.
+7
+8
+{} riding a flying broom.
+9
+{} holding a futuristic energy sword.
+10
+The {} rides a majestic dragon.

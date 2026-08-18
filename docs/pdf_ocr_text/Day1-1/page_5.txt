@@ -1,0 +1,28 @@
+Recap; Flow Matching & Rectified Flows
+Algorithm 1 Rectified Flow: Main Algorithm
+Procedure: Z = RectFlow((Xo, X1)):
+Inputs: Draws from a coupling (Xo, X1) of To and π1; velocity model ve : Rd →> Rd with parameter 0.
+[IX1 - Xo - v(tX1 + (1 - t)Xo, t)Il²] , with t ~ Uniform([0, 1]).
+Training: 0 = arg min E
+θ
+Sampling: Draw (Zo, Z1) following dZt = v(Zt,t)dt starting from Zo ~ To (or backwardly Z1 ~ π1).
+Return: Z = {Zt: t E [0, 1]}.
+Reflow (optional): Zk+1 = RectFlow((Zb, Z)), starting from (Z0, Z) = (Xo, X1).
+Distill (optional): Learn a neural network T to distill the k-rectified flow, such that Z ~ T(Zb).
+Xo
+T0
+π1
+(Z
+RectifiedFlow
+Linear
+X
+Interpolation
+(a) Linear interpolation
+(c) Linear interpolation
+(d) Rectified flow Zt
+(b) Rectified fow Zt
+Xt = tX1 + (1 - t)Xo
+induced by (Xo, X1)
+Zt =tZ1 + (1 -t)Zo
+induced by (Zo,Z1)
+(x x) q n a mo o u (a) · x 0  (x x) 1du p go uoo  ()  a

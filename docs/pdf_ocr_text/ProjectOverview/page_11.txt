@@ -1,0 +1,23 @@
+Sample: Euler Inversion
+Prepare scheduler
+from PIL import Image
+Manual lmage
+pipeline.scheduler = EulerInversion.from_config(pipeline.scheduler.config)
+image = Image.open("actionfigure_2.png")
+with torch.no_grad():
+image = image.convert("RGB").resize((256, 256))
+image
+latent =encoded.latent_dist.sample(torch.Generator().manual_seed(0))
+Prepare VAE Latent
+inverted = pipeline(
+prompt="a harry porter",
+num_inference_steps=28,
+height=256,
+width=256,
+guidance_scale=1.0,
+qenerator=torch.Generator().manual_seed(0),
+latents=latent,
+Diffusion Inversion
+output_type="latent",
+).images
+12

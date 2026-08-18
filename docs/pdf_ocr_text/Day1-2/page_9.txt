@@ -1,0 +1,5 @@
+Diffusers 合:Inversion 
+TODOS
+1. Implement Euler-solver-based inversion
+2. Implement Heun-solver-based inversion
+10

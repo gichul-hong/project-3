@@ -1,0 +1,14 @@
+Overview: RF-lnversion, Rout et al., ICLR 2O25.
+. Diffusers; Stable Diffusion3 assumes
+x = (1 - t)xo + tz; xo ~ Pdata Z ~ Pnoise
+. Controlled generation: Ve(x; t) = ve(x; t) + n(v(xt Ixo) - ve(x; t))
+xt-x
+(nt = 0.9 for t > t = 0.7, otherwise 0)
+ Conditional velocity v(x I xo) =
+t
+. RF-Inversion v(x; t) = ve(x; t) + r(v(x, I z) - ve(x; t))
+Z -xt
+ Conditional velocity v(x, I z) =
+( = 0.5 t)
+1- t
+25

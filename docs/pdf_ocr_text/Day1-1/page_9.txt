@@ -1,0 +1,19 @@
+Recap; Conditional Generation
+DDPMForWard(g)-
+=1{
+q(x I xt-1) = N(x; √1 -Ptxt-1,PI).
+Closed form 2
+x =√a,xo + √1 -α, α = II=1(1 -β),ε ~ N(0,I). 0lH√1 -α"o"
+‘品训
+Reverse（p)ε--labely7
+β1)是合引,
+，DDPMP(x-11
+M(xt-1; μe(xt, t,
+=
+B
+ue(xt, t
+Ee(xt,
+1-p
+noisex_tt
+"0|8”.
+10

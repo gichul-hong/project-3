@@ -1,0 +1,60 @@
+Recap: Stable Diffusion3
+Flow Matching Model with Multimodal Diffusion Backbone
+: time-conditional and text-conditional.
+Caption
+SiLU
+SiLU
+CLIP-G/14
+CLIP-L/14
+T5XXL
+Massive three text encoders
+Linear
+Linear
+77 +77 tokens
+Noised Latent
+T5 XXL alone, takes 4.7B
+Layernorm
+Layernorm
+Pooled
+Patching
+Mod:α··+β
+Mod:α··+β
+Some can be removed for effic.
+4096
+channel
+Linear
+Linear
+Linear
+Important for typography
+RMS.
+ROMS
+Positional
+MLP
+Linear
+Embedding
+MM-DiT varies from 800M to 8B
+K
+Attention
+MLP
+Scales with model size
+MM-DiT-Block1
+Sinusoidal Encoding
+Linear
+Linear
+MM-DiT-Block2
+By varying # of attention blocks
+Timestep
+MM-DiT-Blockd
+Layernorm
+Layernorm
+Mod:·+
+Mod:+
+Modulation
+MLP
+MLP
+Linear
+Unpatching
+Output
+(a)Overviewofallcomponents.
+8
+(b)OneMM-DiTblock

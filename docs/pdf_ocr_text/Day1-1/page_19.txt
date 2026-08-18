@@ -1,0 +1,19 @@
+Diffusers: Stable Diffusion3 Image Generation
+image = pipeline(
+prompt="a photo of a cat holding a sign that says hello world",
+negative_prompt=""",
+num_inference_steps=28,
+Generate the images.
+height=512,
+width=512,
+guidance_scale=7.0,
+).images [0]
+PROMPT: A text description.
+image
+NUM_INFERENCE_STEPS
+: the number of generation steps
+HEIGHT, WIDTH: the size of an image.
+GUIDANCE_SCALE: the scale parameter of CFG
+Hello
+(classifier-free guidance)
+20

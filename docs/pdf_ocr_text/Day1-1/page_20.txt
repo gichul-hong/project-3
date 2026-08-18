@@ -1,0 +1,20 @@
+Diffusers: Stable Diffusion3 Image Generation
+image = pipeline(
+prompt="a photo of a cat holding a sign that says hello world",
+negative_prompt=""
+num_inference_steps=28,
+height=512,
+width=512,
+Random seed
+guidance_scale=7.0,
+generator=torch.Generator() .manual_seed(0)
+To reproduce the generation
+).images[0]
+(to make deterministic sampling)
+image.save("test.png")
+Save image
+ You can use torch.Generator
+(pseudo random generator with manual seed)
+Hello
+world
+21

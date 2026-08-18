@@ -1,0 +1,28 @@
+Preparation
+https://huggingface.co/stabilityai/stable-diffusion-3.5-medium
+ Apply the form and access the repository
+s.stabilityai/stable-diffusion-3.5-medium
+like
+785
+Follows.StabilityAl
+27.4k
+English
+Text-to-lmage
+Diffusers
+8Safetensors
+StableDiffusion3Pipeline
+stable-diffusion
+arxiv:2403.03206
+Modelcard
+三Filesandversions
+Community 32
+xet
+You need to agreeto shareyourcontact information to accessthismodel
+Thisrepository is publiclyaccessible,butyouhaveto accepttheconditionsto accessitsfiles and content.
+By clicking"Agree",you agree to the License Agreement and acknowledge Stability Al's Privacy Policy.
+By agreeingyou accept to share yourcontact information (email and username) with the repository authors.
+Name
+Name (required)
+Email
+Email (required)
+14

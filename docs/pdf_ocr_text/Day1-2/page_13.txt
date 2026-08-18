@@ -1,0 +1,6 @@
+Diffusers 合:Inversion 
+Generative ODE:
+xn-=x+(tn-1-tn)vo(xtn), x~Pnoise
+Inverse ODE:
+xn+=x-(tn-n+1)v(xt;tn),xo ~ Pdata
+14

@@ -1,0 +1,17 @@
+Overview: RF-lnversion, Rout et al., ICLR 2O25.
+ Despite the improved inversion accuracies,
+the latents from corrupted images are also corrupted (or atypical).
+· To find a typical latent, RF-lnversion interpolates the velocity
+. Model velocity ve(xt; t)
+2 -x
+where z ~ Pnoise
+Conditional velocity v(x, z) =
+t
+RF-Inversion: V(x; t) = ve(xt; t) + (v(x, I z) - ve(x; t))
+. And controlled generation: Ve(x; t) = ve(x; t) + nt(v(x, I x1) - ve(x; t))
+x1 -xt
+.Conditional velocity v(x, I x1) =
+where x ~ Pdata
+=
+1-t
+24

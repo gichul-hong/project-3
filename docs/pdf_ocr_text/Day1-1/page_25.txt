@@ -1,0 +1,22 @@
+Diffusers: Scheduler
+from diffusers import FlowMatchHeunDiscreteScheduler
+pipeline.scheduler = FlowMatchHeunDiscreteScheduler.from_config(
+pipeline.scheduler.config
+Replace the scheduler
+image = pipeline(
+prompt="a photo of a cat holding a sign that says hello world",
+negative prompt=""
+Update sampling steps
+num_inference_steps=28,
+Replace the scheduler
+neignt=512,
+width=512,
+Update sampling steps
+guidance_scale=7.0,
+generator=torch.Generator().manua
+Generate images
+).images[0]
+image. save("test. png")
+Hello
+world
+26

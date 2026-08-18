@@ -1,0 +1,10 @@
+Diffusers合:Inversion平
+ Generative ODE
+. Initial latent: Gaussian noise x1 ~ Pnoise
+ Timesteps:1 > tv > ... > t > 0
+Inverse ODE:
+ Initial latent: Data xo ~ Pdata
+Timesteps:0 < t < ... < tv< 1
+; simply invert the timesteps to make the step function consistent
+=xt+(tk+1-tk)v(xt;tk)
+16

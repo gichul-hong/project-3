@@ -1,0 +1,7 @@
+Recap; Classifier-free Guidance
+. Two forward passes per step: &u = Ee(x, t, None), and &c = &e(x, t,y)
+· Blend with scale s(=guidance_scale): & = &u + s(εc - εu) .
+ push the generated inputs closer to the condition (i.e., text prompt)
+. Plug & into the sampler: Use any scheduler to compute the next xt-1·
+. Tune at will: s = 0 (no condition), s ≈ 1 (standard), s > 1(stronger guidance)
+24

@@ -1,0 +1,18 @@
+合：Inversion
+Diffusers
+3.1 Latent preparing
+Obtain VAE latent
+@torch.no_grad()
+def encode_image_to_sd3_latent(pipe, image: Image.Image, seed: int = 0):
+device = pipe._execution_device
+image_tensor = pipe.image_processor.preprocess(image).to(
+device=device, dtype=pipe.vae.dtype
+posterior = pipe.vae.encode(image_tensor).latent_dist
+raw_latent = posterior.sample(generator=torch.Generator(device=device).manual_seed(seed))
+shift_factor = pipe.vae.config.shift_factor
+scaling_factor = pipe.vae.config.scaling_factor
+return（raw_latent- shift_factor）* scaling_factor
+image_latent = encode_image_to_sd3_latent(pipeline, source_image, seed=GENERATION_SEED)
+print("image latent shape:"，tuple(image_latent.shape))
+print("mean/std:", image_latent.float().mean().item(), image_latent.float().std().item())
+19

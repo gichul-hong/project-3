@@ -1,0 +1,22 @@
+坐合：Inversion 
+Diffusers
+2. Implement Time-reversal Euler solver
+class EulerInversion(FlowMatchEulerDiscreteScheduler):
+""FlowMatch Euler schedule data→noise  ."
+def set_timesteps(
+self,
+num_inference_steps=None,
+device=None,
+sigmas=None,
+mu=None,
+timesteps=None,
+super().set_timesteps(
+num_inference_steps=num_inference_steps,
+device=device,
+sigmas=sigmas,
+mu=mu,
+timesteps=timesteps,
+Invert timesteps
+self.timesteps = torch.flip(self.timesteps,dims=(0,))
+self.sigmas = torch.flip(self.sigmas，dims=(0,))
+18

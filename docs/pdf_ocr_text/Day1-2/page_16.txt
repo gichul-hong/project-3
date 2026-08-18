@@ -1,0 +1,17 @@
+合：Inversion
+Diffusers
+pipeline.Scheduler = FlowMatchEulerDiscreteScheduler.from_config(BASE_SCHEDULER_CoNFIG)
+source_image = pipeline(
+prompt=SOURCE_PROMPT,
+negative_prompt=""",
+num_inference_steps=NuM_STEPS,
+height=HEIGHT,
+width=WIDTH,
+guidance_scale=7.0,
+generator=torch.Generator(device=DEVICE).manual_seed(GENERATIoN_SEED),
+).images [0]
+display(source_image)
+1. Generate the sample image
+HELLO
+WORD
+17

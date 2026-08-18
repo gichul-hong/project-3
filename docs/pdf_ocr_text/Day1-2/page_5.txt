@@ -1,0 +1,15 @@
+Inversion
+· How do we find the latent of the images with flow matching?
+Ideal case: operate the integral in the inverse way
+U(2t,t)
+0
+vo(x; t)dt = x1 +
+[-ve(xt; t)]dt
+Xo = x1 +
+ Numerical ODE(Euler solver): discretize the interval
+N
+M
+x = x1 +
+[-ve(x;tn)]△t; O <tn<... <t < 1
+i=1
+=xt-(tn-tn-1)vθ(x;tn)

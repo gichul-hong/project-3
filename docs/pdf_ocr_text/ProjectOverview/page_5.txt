@@ -1,0 +1,3 @@
+Settings
+ From the CustomConcept101 Dataset[link], we only consider ten subejcts
+furniture_sofa2

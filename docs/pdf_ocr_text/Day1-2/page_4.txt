@@ -1,0 +1,12 @@
+ODE Solver
+· Also, let us assume x, = tx, + (1 - t)xo; t ∈ [0,1]
+Then the flow matching learns Ve(x; t) = X1 - Xo
+Ideal Case: We can generate the samples via x1 = xo +
+Ve(xt; t)dt
+· But in general, we cannot compute the integral and so approximate it
+N
+: x = xo +
+Ve(x;tn)△t; 0 <t < ... < tn< 1
+n=1
+. We refer it as discretization
+5

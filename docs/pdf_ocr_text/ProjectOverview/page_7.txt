@@ -1,0 +1,11 @@
+Settings
+ From the CustomConcept101 Dataset[link], we only consider ten subejcts
+For each subject, customize the diffusion models and generate ten
+images of the provided prompts (check prompt.zip)
+Each subject uses different prompts
+E.g., action_figure2
+e.g., Reference Images:
+Generated Images:
+8
+A action figure, surrounded by towering skyscrapers
+A action figure in time square

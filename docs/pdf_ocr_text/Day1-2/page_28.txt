@@ -1,0 +1,26 @@
+：RF-InversionO||I
+Diffusers
+5. Operate RF-lnversion with sampled prior
+Typical random prior
+prior_reference
+：torch.randn(
+image_latent.shape,
+generator=torch.Generator(device=DEVICE).manual_seed(GENERATION_SEED),
+device=image_latent.device,
+dtype=image_latent.dtype,
+Controlled ODE Inversion
+rf_inversion_scheduler = ControlledoDEInversion.from_config(BASE_SCHEDULER_CoNFIG)
+rf_inversion_scheduler.set(prior_reference，tau=0.0,eta=0.5)
+pipeline.scheduler=rf_inversion_scheduler
+inverted_rf = pipeline(
+prompt="", # null-text inversion
+Null-text as inversion
+num_interence_steps=NuM_STEPs,
+height=HEIGHT,
+width=WIDTH,
+guidance_scale=1.0,
+latents=image_latent,
+output_type="latent",
+).images.detach()
+print("RF-inverted mean/std:"， inverted_rf.float().mean().item()， inverted_rf.float().std().item())
+print("sampled prior mean/std:", prior_reference.float().mean().item()， prior_reference.float().std().item())

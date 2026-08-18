@@ -1,0 +1,15 @@
+Preparation
+Page#4
+oSave your Access Token
+Save your token value somewhere safe.You will notbe able to see it again
+after you close this modal. If you lose it, you'll have to create a new one.
+7.
+hf
+Copy
+Copy and keep the token
+Name
+Permissions
+Read-public-repo
+READ
+Done
+16

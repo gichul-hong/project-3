@@ -1,0 +1,16 @@
+Recap; Flow Matching & Rectified Flows
+SourceDistribution
+Target Distribution
+SourceDistribution
+Target Distribution
+SourceDistribution
+TargetDistribution
+1. Independent Coupling
+2. Simulate the Flow
+3. Induced Coupling
+1. Independent Coupling
+2.Simulate the Flow
+3.Induced Coupling
+1. Independent Coupling
+2. Simulate the Flow
+3. Induced Coupling

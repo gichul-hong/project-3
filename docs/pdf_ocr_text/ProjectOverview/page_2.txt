@@ -1,0 +1,6 @@
+Settings
+ From the CustomConcept101 Dataset[link], we only consider ten subejcts
+Actionfigure_2
+decoritems_woodenpot
+instrument_music2
+3

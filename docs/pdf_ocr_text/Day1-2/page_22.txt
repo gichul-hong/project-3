@@ -1,0 +1,79 @@
+合：Inversion
+Diffusers
+classHeunInversion(FlowMatchHeunDiscreteScheduler):
+""Heun schedule data→noise ""…
+Heun Case
+def set_timesteps(self，num_inference_steps: int，device=None):
+self.num_inference_steps=num_inference_steps
+1. Copy from Heun
+timesteps = np.linspace(
+self._sigma_to_t(self.sigma_max),
+Invert timesteps
+2.
+self._sigma_to_t(self.sigma_min),
+num_inference_steps + 1,
+0.0089,
+1.0000,
+0.4322,
+3. Append 1.0
+sigmas= timesteps/ self.config.num_train_timesteps
+0.9233,
+0.6683,
+sigmas = self.config.shift * sigmas /(1 + (self.config.shift - 1）* sigmas)
+0.8189,
+sigmas = torch.from_numpy(sigmas).to(dtype=torch.float32，device=device)
+0.8189,
+0.6683,
+instead of 0.0
+0.9233,
+#[1.0
+sigma minl
+[siama min.
+1.0]
+0.4322,
+Invert timesteps
+sigmas = torch.flip(sigmas, dims=(0,))
+1.0000,
+0.0089,
+Original
+#1.0evaluationterminal
+evaluation_sigmas = sigmas[:-1]
+terminal_sigma = sigmas[-1:]
+timesteps =（
+evaluation_sigmas
+HELLO
+* self.config.num_train_timesteps
+self.sigmas = [
+0.0089,
+0.0089,
+WORD
+self.timesteps = torch.cat([
+0.4322,
+timesteps[:1],
+0.4322，0.4322,
+timesteps[1:].repeat_interleave(2),
+Heun style
+0.6683,
+0.6683，0.6683,
+]).to(device=device)
+0.8189,
+0.8189，0.8189,
+self.sigmas = torch.cat([
+0.9233,
+0.9233，0.9233,
+evaluation_sigmas[:1],
+evaluation_sigmas[1:].repeat_interleave(2),
+1.0000,
+1.0000,
+terminal_sigma,
+HELLO
+HELLO
+self.prev_derivative=None
+23
+self.dt = None
+WORLD
+WORD
+self._step_index = None
+Euler
+Heun
+self._begin_index =None

@@ -1,0 +1,13 @@
+Settings
+. From the CustomConcept101 Dataset[link], we only consider ten subejcts
+· For each subject, customize the diffusion models and generate ten
+images of the provided prompts (check prompt.zip)
+· Each subject uses different prompts
+· We will measure the similarity with openai/CLlP-B/32[link:huggingface]
+. A higher similarity will result in more scores for this project.
+·Not only quantitatively,
+please attach the generated images in the slides for qualitative evaluation.
+· You can manipulate/add/augment the data, modify the scheduler(inversion
+method), train the network(Textual inversion, LoRA, ControlNet), and tune
+the hyperparameters.
+15
