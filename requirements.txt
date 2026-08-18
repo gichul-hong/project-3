@@ -1,0 +1,23 @@
+# ============================================================
+# VERILUX 프로젝트 실행 환경 (SD3.5-medium + RF-Inversion + CLIP 평가)
+# 대상: Google Colab A100 (권장) / 맥미니 16GB (로컬)
+# ============================================================
+
+# ---- Core: 모델 로드 / 생성 / Inversion / 학습 ----
+torch>=2.2.0
+diffusers>=0.31.0
+transformers>=4.44.0
+accelerate>=0.33.0
+safetensors>=0.4.3
+
+# ---- HuggingFace 로그인 / 환경변수(.env) ----
+huggingface_hub>=0.23.0
+python-dotenv>=1.0.0
+
+# ---- 이미지 / 수치 처리 ----
+Pillow>=10.0.0
+numpy>=1.24.0
+
+# ---- 노트북 실행 / 시각화 (선택) ----
+ipython>=8.0.0
+ipywidgets>=8.0.0
