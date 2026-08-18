@@ -40,8 +40,7 @@
 
 | 항목 | 배점 | 설명 |
 |---|---|---|
-| 정량 평가 CLIP-I | 30% (정량 합계) | Image-to-Image: 객체(정체성)가 유지되었는가 |
-| 정량 평가 CLIP-T | 30% (정량 합계) | Text-to-Image: 프롬프트를 따랐는가 |
+| 정량 평가 (CLIP-I & CLIP-T) | 30% | Image-to-Image (객체 정체성 유지) 및 Text-to-Image (프롬프트 준수) 점수 합계 |
 | 정성 평가 | 30% | 다양성: 획일적이지 않고 다양한 이미지인가 / 레퍼런스를 그대로 복사한 수준이 심하지 않은가 |
 | 아이디어 | 40% | 논문/실습 외 새로운 방법론 시도, 단순 학습량·하이퍼파라미터 튜닝 이상의 기여, 기존 기법의 창의적 응용/변형 |
 
@@ -72,10 +71,10 @@
 
 ### 2.1 평가 코드 (`evaluation.py`) 동작 방식
 ```
-python evaluation.py --dataset ./dataset --prompts ./prompts --concept actionfigure_2 --images ./generated/actionfigure_2
+python evaluation.py --dataset ./dataset --prompts ./prompt --concept actionfigure_2 --images ./generated/actionfigure_2
 ```
 - `--dataset`: 레퍼런스 이미지 상위 폴더
-- `--prompts`: 프롬프트 txt 폴더
+- `--prompts`: 프롬프트 txt 폴더 (프로젝트 루트의 `prompt` 폴더 지정)
 - `--concept`: 평가할 서브젝트 하나 (10개 중 택1)
 - `--images`: 생성 이미지 10장 폴더
 - 동작:
@@ -117,11 +116,12 @@ python evaluation.py --dataset ./dataset --prompts ./prompts --concept actionfig
   pipeline = StableDiffusion3Pipeline.from_pretrained(
       "stabilityai/stable-diffusion-3.5-medium",
       text_encoder_3=None, tokenizer_3=None,
-      torch_dtype=torch.float16,
+      torch_dtype=torch.bfloat16,  # Colab A100 등 Ampere GPU 권장 (float16보다 수치 안정적)
   )
   pipeline.enable_model_cpu_offload()
   ```
   - `text_encoder_3=None, tokenizer_3=None` → T5 XXL(4.7B) 생략 (효율성).
+  - Colab A100(Ampere GPU)에서는 `torch.bfloat16`이 `float16` 대비 언더플로우/수치 불안정성을 방지해 안정적입니다.
   - VRAM > 8GB면 red line(위 인자들) 제거 가능.
 - **생성** 핵심 파라미터:
   - `prompt`, `negative_prompt`, `num_inference_steps`(기본 28), `height`, `width`, `guidance_scale`(CFG), `generator=torch.Generator().manual_seed(0)` (재현성).
@@ -180,6 +180,13 @@ python evaluation.py --dataset ./dataset --prompts ./prompts --concept actionfig
 
 ### 3.1 단계별 로드맵
 
+> 💡 **[핵심 진행 전략] 샘플 검증 후 횡전개 (Fast Prototyping & Rollout)**  
+> 10개 서브젝트(100장) 전체를 대상으로 매번 실험을 반복하는 것은 계산 자원 및 시간 효율성이 떨어집니다.  
+> **대표 샘플 서브젝트 1~2개**를 선정하여 파이프라인 구축 및 아이디어를 빠르게 검증(Fast Prototyping)한 뒤, 점수 향상이 확인되면 **전체 10개 서브젝트로 횡전개(Rollout)**하는 전략을 취합니다.
+> - **추천 샘플 서브젝트 (2종)**:
+>   1. `actionfigure_2` (사물/단일 객체 대표, 6장 png)
+>   2. `pet_cat5` 또는 `person_3` (생물/복합 인물/다수 레퍼런스 대표, 9~15장)
+
 **Phase 0 — 준비**
 1. HuggingFace 계정 가입 + `stabilityai/stable-diffusion-3.5-medium` 라이선스 동의(게이팅).
 2. 액세스 토큰: 이미 **`C:\hong\project-3\.env`** 에 `HF_TOKEN=hf_...` 로 저장되어 있음 (로컬).
@@ -189,15 +196,14 @@ python evaluation.py --dataset ./dataset --prompts ./prompts --concept actionfig
 4. 환경 구축: `torch`, `diffusers`, `transformers`, `accelerate`, `safetensors`, `PIL`, `numpy`.
 5. `evaluation.py` 로컬 실행 확인 (CPU로도 CLIP은 동작).
 
-**Phase 1 — Baseline 확립 (필수, 점수 기준선)**
-1. `Day1_RF_Inversion_Practice_exercise.ipynb`의 inversion 파이프라인을 데이터셋에 적용.
-2. 서브젝트당:
-   - 레퍼런스 이미지 1장(또는 대표 1장)을 latent로 인코딩 → Euler/RF-Inversion → 10개 프롬프트로 생성.
-   - `0.png ~ 9.png` 저장.
-3. `evaluation.py`로 서브젝트별 CLIP-I/CLIP-T 측정 → baseline 기록.
-4. **주의**: 생성 이미지 순서 = 프롬프트 순서 (0.png = 1번 프롬프트).
+**Phase 1 — Baseline 확립 (샘플 1~2개 우선 적용 후 횡전개)**
+1. `Day1_RF_Inversion_Practice_exercise.ipynb`의 inversion 파이프라인을 **샘플 서브젝트 (`actionfigure_2`, `pet_cat5`)**에 우선 적용.
+2. 서브젝트당 레퍼런스 이미지 1장(또는 대표 1장)을 latent로 인코딩 → Euler/RF-Inversion → 10개 프롬프트로 생성 (`0.png ~ 9.png` 저장).
+3. `evaluation.py`로 샘플 서브젝트의 CLIP-I/CLIP-T Baseline 점수 확인.
+4. 샘플에서 정상 작동 확인 후 **전체 10개 서브젝트로 횡전개하여 Baseline 점수 확립**.
+5. **주의**: 생성 이미지 순서 = 프롬프트 순서 (`0.png` = 1번 프롬프트).
 
-**Phase 2 — 개선 (정량 점수 최대화, CLIP-I/CLIP-T)**
+**Phase 2 — 개선 (샘플 검증 → 10개 서브젝트 횡전개)**
 - **정체성 유지(CLIP-I) 개선 방법**:
   - Textual Inversion / LoRA (SD3.5에서 가능한지 확인 필요 — SD3.5는 diffusers에서 LoRA/TI 지원 여부 검증).
   - RF-Inversion의 `eta/tau` 튜닝, reference latent를 "레퍼런스 집합의 평균/대표"로 선정.
@@ -205,8 +211,9 @@ python evaluation.py --dataset ./dataset --prompts ./prompts --concept actionfig
 - **프롬프트 준수(CLIP-T) 개선 방법**:
   - guidance_scale(CFG) 조정, negative_prompt 최적화, scheduler 선택(Euler vs Heun), step 수.
   - 프롬프트 수정 허용(발표 명시): 예를 들어 생성 시에는 `photo of a {}` 대신 class 단어 포함 강화 등.
-- **하이퍼파라미터 그리드 탐색**: seed, steps(28→50), CFG(2.0~7.0), height/width(256 vs 512).
-- **데이터 증강**: 레퍼런스 이미지 crop/회전/색상 변형 등으로 정체성 강화.
+- **실험 절차**:
+  1. 샘플 서브젝트 1~2개에서 하이퍼파라미터/기법 튜닝 후 CLIP 점수 측정.
+  2. 점수 향상이 입증된 최적 설정을 전체 10개 서브젝트로 횡전개 실행.
 
 **Phase 3 — 아이디어 (40% 비중, 차별화 핵심)**
 - 실습 외 창의적 방법론 최소 1~2개 설계·실험. 예시 후보:
@@ -227,9 +234,11 @@ python evaluation.py --dataset ./dataset --prompts ./prompts --concept actionfig
 - 발표 슬라이드: 실습 영역 vs 아이디어 영역 구분, 방법론별 점수 비교, 대표 이미지 첨부.
 - 이미지 zip 제출.
 
-### 3.2 작업 분배 제안 (Agent 병렬화)
-- Colab A100에서 서브젝트별로 독립 파이프라인이므로 **서브젝트 단위 병렬화** 가능.
-- 추천: baseline 1개 서브젝트로 파이프라인 완성 → 나머지 9개 병렬 실행.
+### 3.2 작업 분배 및 실험 효율화 (Fast Iteration)
+- **샘플 1~2개 집중 검증 후 횡전개**:
+  - 아이디어 시도 시 매번 100장을 생성하지 않고, **샘플 서브젝트 1~2개(10~20장)**로 빠른 피드백 루프 수행.
+- **Colab A100 병렬화**:
+  - 검증 완료된 방법론을 10개 서브젝트로 횡전개 시 서브젝트 단위 병렬 실행 스크립트 활용.
 - `evaluation.py`는 서브젝트 1개씩 실행하므로 스크립트로 10개 루프 처리 가능.
 
 ### 3.3 리스크 / 주의사항
@@ -239,6 +248,8 @@ python evaluation.py --dataset ./dataset --prompts ./prompts --concept actionfig
 4. **프롬프트 순서 매핑**: 생성 루프에서 i번째 프롬프트 → i.png가 되도록 인덱스 관리.
 5. **CLIP-I는 전체 쌍 평균**: 레퍼런스와 생성 이미지의 전반적 유사도가 중요.
 6. **아이디어(40%)**: 단순 튜닝으로는 한계, 반드시 창의적 방법론 + 그 근거/실험 결과 필요.
+7. **프롬프트 폴더 경로**: `evaluation.py` 실행 시 `--prompts ./prompt` (단수형 `prompt`) 지정 확인.
+8. **Colab A100 GPU 수치 안정성**: `torch.bfloat16` dtype 사용 권장 (float16 대비 언더플로우 방지).
 
 ---
 
@@ -379,7 +390,7 @@ from diffusers import StableDiffusion3Pipeline
 pipeline = StableDiffusion3Pipeline.from_pretrained(
     "stabilityai/stable-diffusion-3.5-medium",
     text_encoder_3=None, tokenizer_3=None,
-    torch_dtype=torch.float16,
+    torch_dtype=torch.bfloat16,  # Colab A100 등 Ampere GPU 권장 (float16 사용 가능)
 )
 pipeline.enable_model_cpu_offload()
 
@@ -402,7 +413,7 @@ image.save("0.png")
 
 ### B.3 평가 실행
 ```bash
-python evaluation.py --dataset ./dataset --prompts ./prompts --concept <subject> --images ./generated/<subject>
+python evaluation.py --dataset ./dataset --prompts ./prompt --concept <subject> --images ./generated/<subject>
 ```
 
 ---
