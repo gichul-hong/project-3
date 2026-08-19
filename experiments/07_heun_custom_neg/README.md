@@ -25,8 +25,8 @@ python generate_hybrid.py \
 ```
 
 ## 3. 평가 점수 요약
-- **Text-to-Image (CLIP-T)**: **0.3299**
-- **Image-to-Image (CLIP-I)**: **0.7308**
-- **Total Combined (T+I)**: **1.0607**
+- **Text-to-Image (CLIP-T)**: **0.3224**
+- **Image-to-Image (CLIP-I)**: **0.7234**
+- **Total Combined (T+I)**: **1.0458**
 
 > 📌 상세 10개 서브젝트별 22개 점수표: [`EVALUATION_REPORT.md`](file:///content/project-3/experiments/07_heun_custom_neg/EVALUATION_REPORT.md)
