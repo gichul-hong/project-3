@@ -1,0 +1,57 @@
+{
+  "method": "SD3.5 LoRA Fine-Tuning",
+  "instance_token": "sks",
+  "hyperparameters": {
+    "steps": 28,
+    "cfg": 7.0,
+    "seed": 42
+  },
+  "elapsed_seconds": 562.02,
+  "average_scores": {
+    "CLIP-T": 0.3332,
+    "CLIP-I": 0.6645,
+    "CLIP-Total": 0.9977
+  },
+  "per_concept_scores": {
+    "actionfigure_2": {
+      "t2i": 0.3224,
+      "i2i": 0.4622
+    },
+    "decoritems_woodenpot": {
+      "t2i": 0.3563,
+      "i2i": 0.634
+    },
+    "furniture_sofa2": {
+      "t2i": 0.3248,
+      "i2i": 0.7678
+    },
+    "instrument_music2": {
+      "t2i": 0.3507,
+      "i2i": 0.7244
+    },
+    "luggage_backpack1": {
+      "t2i": 0.3389,
+      "i2i": 0.7322
+    },
+    "person_3": {
+      "t2i": 0.3115,
+      "i2i": 0.5163
+    },
+    "pet_cat5": {
+      "t2i": 0.3287,
+      "i2i": 0.7944
+    },
+    "scene_waterfall": {
+      "t2i": 0.3438,
+      "i2i": 0.7514
+    },
+    "transport_tank": {
+      "t2i": 0.3341,
+      "i2i": 0.5599
+    },
+    "wearable_jacket1": {
+      "t2i": 0.3208,
+      "i2i": 0.7021
+    }
+  }
+}
