@@ -23,7 +23,6 @@ env/
 
 # Model / dataset / generated artifacts (large binaries)
 dataset/
-augmentation/
 generated/
 outputs/
 lora_weights/
