@@ -28,6 +28,9 @@ generated/
 outputs/
 lora_weights/
 checkpoints/
+checkpoint/
+backups/
+backup/
 scratch/
 wandb/
 runs/

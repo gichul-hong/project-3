@@ -1,0 +1,61 @@
+{
+  "method": "LoRA + RF-Inversion Hybrid",
+  "instance_token": "sks",
+  "ref_mode": "first",
+  "hyperparameters": {
+    "steps": 28,
+    "cfg": 7.0,
+    "tau": 0.7,
+    "eta": 0.8,
+    "gamma": 0.5,
+    "seed": 42
+  },
+  "elapsed_seconds": 607.54,
+  "average_scores": {
+    "CLIP-T": 0.3082,
+    "CLIP-I": 0.7634,
+    "CLIP-Total": 1.0716
+  },
+  "per_concept_scores": {
+    "actionfigure_2": {
+      "t2i": 0.2744,
+      "i2i": 0.6749
+    },
+    "decoritems_woodenpot": {
+      "t2i": 0.3286,
+      "i2i": 0.7854
+    },
+    "furniture_sofa2": {
+      "t2i": 0.2769,
+      "i2i": 0.9011
+    },
+    "instrument_music2": {
+      "t2i": 0.3267,
+      "i2i": 0.8128
+    },
+    "luggage_backpack1": {
+      "t2i": 0.3144,
+      "i2i": 0.8554
+    },
+    "person_3": {
+      "t2i": 0.3038,
+      "i2i": 0.5423
+    },
+    "pet_cat5": {
+      "t2i": 0.3126,
+      "i2i": 0.8275
+    },
+    "scene_waterfall": {
+      "t2i": 0.3357,
+      "i2i": 0.7871
+    },
+    "transport_tank": {
+      "t2i": 0.2986,
+      "i2i": 0.6368
+    },
+    "wearable_jacket1": {
+      "t2i": 0.3105,
+      "i2i": 0.8109
+    }
+  }
+}

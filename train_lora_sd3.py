@@ -334,8 +334,8 @@ def train_concept_lora(
 def main():
     parser = argparse.ArgumentParser(description="SD3.5 LoRA Fine-Tuning Pipeline")
     parser.add_argument("--concept", type=str, default="actionfigure_2", help="서브젝트명 ('all' 또는 특정 서브젝트)")
-    parser.add_argument("--dataset", type=str, default="./augmentation", help="증강 데이터셋 최상위 폴더")
-    parser.add_argument("--output_dir", type=str, default="./checkpoints", help="체크포인트 저장 디렉토리")
+    parser.add_argument("--exp_name", type=str, default="", help="실험 버전명 (지정 시 ./checkpoints/<exp_name>/ 에 저장)")
+    parser.add_argument("--output_dir", type=str, default="./checkpoints", help="체크포인트 기본 저장 디렉토리")
     parser.add_argument("--instance_token", type=str, default="sks", help="인스턴스 고유 토큰")
     parser.add_argument("--rank", type=int, default=16, help="LoRA Rank (기본 16)")
     parser.add_argument("--alpha", type=int, default=32, help="LoRA Alpha (기본 32)")
@@ -347,6 +347,8 @@ def main():
 
     args = parser.parse_args()
 
+    actual_output_dir = os.path.join(args.output_dir, args.exp_name) if args.exp_name else args.output_dir
+
     if args.concept == "all":
         target_concepts = list(CLASS_PROMPT.keys())
     else:
@@ -357,7 +359,7 @@ def main():
         train_concept_lora(
             concept=concept,
             dataset_dir=args.dataset,
-            output_base_dir=args.output_dir,
+            output_base_dir=actual_output_dir,
             instance_token=args.instance_token,
             r=args.rank,
             lora_alpha=args.alpha,

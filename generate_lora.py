@@ -171,7 +171,7 @@ def run_evaluation(concept: str, dataset_dir: str = "./dataset", prompts_dir: st
 
 def main():
     parser = argparse.ArgumentParser(description="SD3.5 LoRA Generation & Evaluation")
-    parser.add_argument("--concept", type=str, default="actionfigure_2", help="서브젝트명 ('all' 또는 특정 서브젝트)")
+    parser.add_argument("--exp_name", type=str, default="", help="실험 버전명 (지정 시 checkpoints와 output 경로 자동 매핑)")
     parser.add_argument("--checkpoints_dir", type=str, default="./checkpoints", help="체크포인트 상위 디렉토리")
     parser.add_argument("--dataset", type=str, default="./dataset", help="평가용 원본 레퍼런스 데이터셋 경로")
     parser.add_argument("--prompts", type=str, default="./prompt", help="프롬프트 폴더 경로")
@@ -185,9 +185,12 @@ def main():
 
     args = parser.parse_args()
 
+    actual_checkpoints_dir = os.path.join(args.checkpoints_dir, args.exp_name) if args.exp_name else args.checkpoints_dir
+    actual_output_dir = os.path.join("./experiments", args.exp_name) if args.exp_name else args.output
+
     start_time = time.time()
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    os.makedirs(args.output, exist_ok=True)
+    os.makedirs(actual_output_dir, exist_ok=True)
 
     if args.concept == "all":
         target_concepts = list(CLASS_PROMPT.keys())
@@ -197,14 +200,14 @@ def main():
     eval_results = {}
 
     for concept in target_concepts:
-        ckpt_dir = os.path.join(args.checkpoints_dir, f"lora_{concept}")
+        ckpt_dir = os.path.join(actual_checkpoints_dir, f"lora_{concept}")
         pipeline = load_sd3_lora_pipeline(checkpoint_dir=ckpt_dir, device_type=device)
 
         generate_for_concept(
             pipeline=pipeline,
             concept=concept,
             prompts_dir=args.prompts,
-            output_dir=args.output,
+            output_dir=actual_output_dir,
             instance_token=args.instance_token,
             use_token=not args.no_token,
             num_inference_steps=args.steps,
@@ -221,7 +224,7 @@ def main():
                 concept=concept,
                 dataset_dir=args.dataset,
                 prompts_dir=args.prompts,
-                generated_dir=args.output
+                generated_dir=actual_output_dir
             )
             if t2i is not None and i2i is not None:
                 eval_results[concept] = {"t2i": round(t2i, 4), "i2i": round(i2i, 4)}
@@ -251,8 +254,8 @@ def main():
         }
 
         # JSON & Markdown 동시 저장
-        out_json_path = os.path.join(args.output, "eval_summary.json")
-        out_md_path = os.path.join(args.output, "EVALUATION_REPORT.md")
+        out_json_path = os.path.join(actual_output_dir, "eval_summary.json")
+        out_md_path = os.path.join(actual_output_dir, "EVALUATION_REPORT.md")
 
         with open(out_json_path, "w", encoding="utf-8") as f:
             json.dump(summary_data, f, indent=2, ensure_ascii=False)
