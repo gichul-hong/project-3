@@ -32,9 +32,11 @@ CLASS_PROMPT = {
 }
 
 
-def get_image_info(img_path):
+def get_image_info(img_path, root_dir=None):
     """이미지 해상도, 용량, 상대 경로 추출"""
-    rel_path = os.path.relpath(img_path, r"C:\hong\project-3").replace("\\", "/")
+    if root_dir is None:
+        root_dir = os.path.dirname(os.path.abspath(__file__))
+    rel_path = os.path.relpath(img_path, root_dir).replace("\\", "/")
     file_size_kb = round(os.path.getsize(img_path) / 1024, 1)
     filename = os.path.basename(img_path)
     
@@ -69,7 +71,7 @@ def scan_dataset(root_dir):
                 glob.glob(os.path.join(orig_dir, "*.jpg")) +
                 glob.glob(os.path.join(orig_dir, "*.jpeg"))
             )
-            orig_imgs = [get_image_info(p) for p in paths]
+            orig_imgs = [get_image_info(p, root_dir=root_dir) for p in paths]
 
         # 증강 데이터 스캔
         aug_dir = os.path.join(root_dir, "augmentation", concept)
@@ -80,7 +82,7 @@ def scan_dataset(root_dir):
                 glob.glob(os.path.join(aug_dir, "*.jpg")) +
                 glob.glob(os.path.join(aug_dir, "*.jpeg"))
             )
-            aug_imgs = [get_image_info(p) for p in paths]
+            aug_imgs = [get_image_info(p, root_dir=root_dir) for p in paths]
 
         # 프롬프트 스캔
         prompt_file = os.path.join(root_dir, "prompt", f"{concept}.txt")
@@ -387,8 +389,9 @@ def start_server(html_path, host="0.0.0.0", port=8000):
 
 
 def main():
+    default_root = os.path.dirname(os.path.abspath(__file__))
     parser = argparse.ArgumentParser(description="Dataset Viewer Generator")
-    parser.add_argument("--root", type=str, default=r"C:\hong\project-3", help="프로젝트 루트 폴더")
+    parser.add_argument("--root", type=str, default=default_root, help="프로젝트 루트 폴더")
     parser.add_argument("--out", type=str, default="dataset_viewer.html", help="생성할 HTML 파일명")
     parser.add_argument("--server", action="store_true", help="생성 후 HTTP 서버 자동 구동")
     parser.add_argument("--host", type=str, default="0.0.0.0", help="바인딩 호스트 주소 (기본 0.0.0.0)")
