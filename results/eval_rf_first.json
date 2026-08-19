@@ -1,0 +1,25 @@
+{
+  "method": "RF-Inversion",
+  "ref_mode": "first",
+  "hyperparameters": {
+    "steps": 28,
+    "cfg": 7.0,
+    "tau": 0.7,
+    "eta": 0.9,
+    "gamma": 0.5,
+    "seed": 42
+  },
+  "dataset": "./dataset",
+  "elapsed_seconds": 50.12,
+  "average_scores": {
+    "CLIP-T": 0.2755,
+    "CLIP-I": 0.695,
+    "CLIP-Total": 0.9705
+  },
+  "per_concept_scores": {
+    "actionfigure_2": {
+      "t2i": 0.2755,
+      "i2i": 0.695
+    }
+  }
+}
