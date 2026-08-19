@@ -2,7 +2,7 @@
   "method": "SD3.5 LoRA + Controlled ODE Hybrid",
   "instance_token": "sks",
   "hyperparameters": {
-    "steps": 10,
+    "steps": 50,
     "cfg": 7.0,
     "tau": 0.7,
     "eta": 0.85,
@@ -14,20 +14,32 @@
     "enable_t5": true,
     "seed": 42
   },
-  "elapsed_seconds": 69.41,
+  "elapsed_seconds": 148.14,
   "average_scores": {
-    "CLIP-T": 0.3302,
-    "CLIP-I": 0.622,
-    "CLIP-Total": 0.9522
+    "CLIP-T": 0.3299,
+    "CLIP-I": 0.7308,
+    "CLIP-Total": 1.0607
   },
   "per_concept_scores": {
     "actionfigure_2": {
-      "t2i": 0.3349,
-      "i2i": 0.4774
+      "t2i": 0.3158,
+      "i2i": 0.6497
     },
     "pet_cat5": {
       "t2i": 0.3255,
       "i2i": 0.7667
+    },
+    "decoritems_woodenpot": {
+      "t2i": 0.3551,
+      "i2i": 0.7211
+    },
+    "furniture_sofa2": {
+      "t2i": 0.3021,
+      "i2i": 0.8078
+    },
+    "instrument_music2": {
+      "t2i": 0.3509,
+      "i2i": 0.7088
     }
   }
 }

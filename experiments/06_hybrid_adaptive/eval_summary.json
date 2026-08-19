@@ -14,11 +14,11 @@
     "enable_t5": true,
     "seed": 42
   },
-  "elapsed_seconds": 67.94,
+  "elapsed_seconds": 68.27,
   "average_scores": {
-    "CLIP-T": 0.3338,
-    "CLIP-I": 0.712,
-    "CLIP-Total": 1.0458
+    "CLIP-T": 0.3241,
+    "CLIP-I": 0.7192,
+    "CLIP-Total": 1.0433
   },
   "per_concept_scores": {
     "actionfigure_2": {
@@ -26,12 +26,40 @@
       "i2i": 0.6505
     },
     "pet_cat5": {
-      "t2i": 0.3279,
-      "i2i": 0.7669
+      "t2i": 0.3283,
+      "i2i": 0.7888
     },
     "decoritems_woodenpot": {
       "t2i": 0.3557,
       "i2i": 0.7186
+    },
+    "furniture_sofa2": {
+      "t2i": 0.3175,
+      "i2i": 0.7997
+    },
+    "instrument_music2": {
+      "t2i": 0.3544,
+      "i2i": 0.7099
+    },
+    "luggage_backpack1": {
+      "t2i": 0.3212,
+      "i2i": 0.7755
+    },
+    "person_3": {
+      "t2i": 0.3068,
+      "i2i": 0.5653
+    },
+    "scene_waterfall": {
+      "t2i": 0.3349,
+      "i2i": 0.7789
+    },
+    "transport_tank": {
+      "t2i": 0.2966,
+      "i2i": 0.635
+    },
+    "wearable_jacket1": {
+      "t2i": 0.3077,
+      "i2i": 0.7694
     }
   }
 }
