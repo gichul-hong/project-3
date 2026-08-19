@@ -1,28 +1,29 @@
 """
-SD3.5 LoRA + RF-Inversion Hybrid Generation & Evaluation Pipeline (Iter 4)
--------------------------------------------------------------------------
+SD3.5 LoRA + RF-Inversion Hybrid Generation & Evaluation Pipeline (Iter 4/6/7)
+-----------------------------------------------------------------------------
 [아이디어 40% 핵심 차별화 기법]
 LoRA 파인튜닝 모델(높은 CLIP-T) + Controlled ODE RF-Inversion(높은 CLIP-I)을 결합하여
 프롬프트 준수력과 객체 정체성을 동시에 극대화하는 하이브리드 파이프라인.
 
-특징:
-1. 학습된 LoRA 가중치를 SD3.5 백본에 주입.
-2. 레퍼런스 이미지(또는 nobg 증강 이미지)를 VAE Latent로 인코딩.
-3. LoRA 모델 기반 Controlled ODE Inversion (Sampled Prior 역추적).
-4. LoRA 모델 + Controlled ODE Generation (Reference Latent 방향 Velocity 혼합).
-5. 100장 이미지 자동 생성 및 CLIP-T / CLIP-I 종합 평가 및 리포트 저장.
+확장 기능:
+1. Multi-reference Latent Averaging (nobg / raw ensemble).
+2. Adaptive eta schedule (Cosine / Power decay) for smooth guidance transition.
+3. FlowMatch Heun 2nd-order ODE Solver & 50-step inference.
+4. Concept-specific negative prompts.
+5. T5-XXL 텍스트 인코더 연동.
 
 사용법:
-    1) 샘플 서브젝트 빠른 테스트:
-       python generate_hybrid.py --concept actionfigure_2 --tau 0.7 --eta 0.8
+    1) Exp-06 (LoRA HQ + Adaptive eta + Multi-reference avg):
+       python generate_hybrid.py --concept all --checkpoints_dir ./checkpoints/exp05_lora_hq --ref_mode avg --eta_schedule adaptive --output ./experiments/06_hybrid_adaptive
 
-    2) 전체 10개 서브젝트 일괄 실행 (Exp-04):
-       python generate_hybrid.py --concept all --output ./experiments/04_lora_rf_hybrid
+    2) Exp-07 (Exp-06 + Heun 50 steps + Custom Negative Prompt):
+       python generate_hybrid.py --concept all --checkpoints_dir ./checkpoints/exp05_lora_hq --ref_mode avg --eta_schedule adaptive --scheduler heun --steps 50 --custom_neg --output ./experiments/07_heun_custom_neg
 """
 
 import argparse
 import glob
 import json
+import math
 import os
 import subprocess
 import sys
@@ -36,9 +37,13 @@ import torch
 from diffusers import (
     StableDiffusion3Pipeline,
     FlowMatchEulerDiscreteScheduler,
+    FlowMatchHeunDiscreteScheduler,
 )
 from diffusers.schedulers.scheduling_flow_match_euler_discrete import (
     FlowMatchEulerDiscreteSchedulerOutput,
+)
+from diffusers.schedulers.scheduling_flow_match_heun_discrete import (
+    FlowMatchHeunDiscreteSchedulerOutput,
 )
 from peft import PeftModel
 
@@ -57,18 +62,40 @@ CLASS_PROMPT = {
     "wearable_jacket1": "jacket",
 }
 
+DEFAULT_NEGATIVE_PROMPTS = {
+    "actionfigure_2": "human skin, real human face, photographic skin texture, blurry, distorted joints, bad anatomy, deformed plastic",
+    "decoritems_woodenpot": "plastic, metallic, glossy, blurry, low resolution, deformed opening, distorted shape",
+    "furniture_sofa2": "wooden chair, bed, deformed cushions, messy fabric, blurry, distorted legs, bad perspective",
+    "instrument_music2": "piano, drums, distorted guitar neck, missing strings, extra headstock, blurry, bad anatomy",
+    "luggage_backpack1": "handbag, plastic bag, distorted straps, deformed zipper, blurry, bad texture",
+    "person_3": "blurry face, distorted eyes, extra limbs, bad anatomy, deformed fingers, low resolution, cartoon",
+    "pet_cat5": "dog, ugly fur, distorted whiskers, extra paws, deformed eyes, blurry, bad anatomy",
+    "scene_waterfall": "dry rocks, static water, cartoon, low resolution, distorted horizon, messy textures",
+    "transport_tank": "civilian car, distorted tracks, deformed barrel, low resolution, blurry, deformed armor",
+    "wearable_jacket1": "shirt, hoodie, distorted collar, missing zipper, low resolution, blurry, deformed cloth",
+}
+
 
 # ==============================================================================
-# 1. Controlled ODE Schedulers (Flow Matching RF-Inversion)
+# 1. Controlled ODE Schedulers (Euler & Heun with Adaptive Eta)
 # ==============================================================================
 
 class ControlledODE(FlowMatchEulerDiscreteScheduler):
     """원본 레퍼런스 latent 방향의 conditional velocity를 혼합하는 생성 Scheduler"""
 
-    def set(self, reference: torch.Tensor, tau: float = 0.7, eta: float = 0.8):
+    def set(
+        self,
+        reference: torch.Tensor,
+        tau: float = 0.7,
+        eta: float = 0.8,
+        schedule: str = "adaptive",
+        alpha: float = 1.5,
+    ):
         self.reference = reference
         self.tau = float(tau)
         self.eta = float(eta)
+        self.schedule = schedule
+        self.alpha = float(alpha)
         self._step_index = None
         return self
 
@@ -93,7 +120,19 @@ class ControlledODE(FlowMatchEulerDiscreteScheduler):
         sigma_next = self.sigmas[self.step_index + 1].to(sample.device)
 
         conditional_velocity = self.controller(sample_fp32, sigma).to(model_output.dtype)
-        current_eta = self.eta if sigma.item() > self.tau else 0.0
+        sigma_val = sigma.item()
+
+        if sigma_val > self.tau:
+            if self.schedule == "adaptive":
+                progress = (sigma_val - self.tau) / max(1.0 - self.tau, 1e-6)
+                current_eta = self.eta * (progress ** self.alpha)
+            elif self.schedule == "cosine":
+                progress = (sigma_val - self.tau) / max(1.0 - self.tau, 1e-6)
+                current_eta = self.eta * math.sin(progress * math.pi / 2.0)
+            else:
+                current_eta = self.eta
+        else:
+            current_eta = 0.0
 
         controlled_velocity = model_output + current_eta * (conditional_velocity - model_output)
         prev_sample = sample_fp32 + (sigma_next - sigma) * controlled_velocity
@@ -106,11 +145,73 @@ class ControlledODE(FlowMatchEulerDiscreteScheduler):
         return FlowMatchEulerDiscreteSchedulerOutput(prev_sample=prev_sample)
 
 
+class ControlledHeunODE(FlowMatchHeunDiscreteScheduler):
+    """FlowMatch Heun 2nd-order Scheduler에 Controlled ODE Velocity를 적용"""
+
+    def set(
+        self,
+        reference: torch.Tensor,
+        tau: float = 0.7,
+        eta: float = 0.8,
+        schedule: str = "adaptive",
+        alpha: float = 1.5,
+    ):
+        self.reference = reference
+        self.tau = float(tau)
+        self.eta = float(eta)
+        self.schedule = schedule
+        self.alpha = float(alpha)
+        self._step_index = None
+        return self
+
+    def controller(self, sample: torch.Tensor, sigma: torch.Tensor):
+        reference = self.reference.to(device=sample.device, dtype=sample.dtype)
+        return (sample - reference) / sigma.clamp_min(1e-6)
+
+    def step(
+        self,
+        model_output: torch.Tensor,
+        timestep: torch.Tensor,
+        sample: torch.Tensor,
+        *args,
+        return_dict: bool = True,
+        **kwargs,
+    ):
+        if self.step_index is None:
+            self._init_step_index(timestep)
+
+        sample_fp32 = sample.to(torch.float32)
+        sigma = self.sigmas[self.step_index].to(sample.device)
+        sigma_next = self.sigmas[self.step_index + 1].to(sample.device)
+
+        conditional_velocity = self.controller(sample_fp32, sigma).to(model_output.dtype)
+        sigma_val = sigma.item()
+
+        if sigma_val > self.tau:
+            if self.schedule == "adaptive":
+                progress = (sigma_val - self.tau) / max(1.0 - self.tau, 1e-6)
+                current_eta = self.eta * (progress ** self.alpha)
+            else:
+                current_eta = self.eta
+        else:
+            current_eta = 0.0
+
+        controlled_velocity = model_output + current_eta * (conditional_velocity - model_output)
+        prev_sample = sample_fp32 + (sigma_next - sigma) * controlled_velocity
+        prev_sample = prev_sample.to(model_output.dtype)
+
+        self._step_index += 1
+
+        if not return_dict:
+            return (prev_sample,)
+        return FlowMatchHeunDiscreteSchedulerOutput(prev_sample=prev_sample)
+
+
 class ControlledODEInversion(ControlledODE):
     """Sampled prior (Noise) 방향의 conditional velocity를 보정하는 역변환 Scheduler"""
 
     def set(self, reference: torch.Tensor, tau: float = 0.0, eta: float = 0.5):
-        return super().set(reference, tau=tau, eta=eta)
+        return super().set(reference, tau=tau, eta=eta, schedule="step")
 
     def controller(self, sample: torch.Tensor, sigma: torch.Tensor):
         reference = self.reference.to(device=sample.device, dtype=sample.dtype)
@@ -160,10 +261,15 @@ def encode_image_to_sd3_latent(pipe: StableDiffusion3Pipeline, image: Image.Imag
 
 def get_reference_latent(
     pipe: StableDiffusion3Pipeline,
-    concept_dir: str,
-    ref_mode: str = "first",
+    concept: str,
+    dataset_dir: str = "./dataset",
+    aug_dir: str = "./augmentation",
+    ref_mode: str = "avg",
     seed: int = 42
 ) -> torch.Tensor:
+    concept_dir = os.path.join(dataset_dir, concept)
+    concept_aug_dir = os.path.join(aug_dir, concept)
+    
     valid_exts = ("*.png", "*.jpg", "*.jpeg", "*.webp")
     image_paths = []
     for ext in valid_exts:
@@ -173,22 +279,36 @@ def get_reference_latent(
     if not image_paths:
         raise FileNotFoundError(f"레퍼런스 이미지를 찾을 수 없습니다: {concept_dir}")
 
-    # nobg 이미지 우선 모드
-    if ref_mode == "nobg":
-        nobg_candidates = [p for p in image_paths if "nobg" in os.path.basename(p)]
-        selected_path = nobg_candidates[0] if nobg_candidates else image_paths[0]
-        print(f"  [Ref Mode: nobg] {os.path.basename(selected_path)} 선택됨")
-        img = Image.open(selected_path)
-        return encode_image_to_sd3_latent(pipe, img, seed=seed)
-
-    elif ref_mode == "avg":
-        print(f"  [Ref Mode: avg] 총 {len(image_paths)}장 레퍼런스 Latent 앙상블 계산 중...")
+    if ref_mode == "avg":
+        # Raw dataset + nobg augmentation images 앙상블
+        aug_nobg_paths = []
+        if os.path.exists(concept_aug_dir):
+            for ext in valid_exts:
+                aug_nobg_paths.extend(glob.glob(os.path.join(concept_aug_dir, f"*_nobg{ext.replace('*', '')}")))
+        
+        all_paths = image_paths + sorted(aug_nobg_paths)
+        print(f"  [Ref Mode: avg] 총 {len(all_paths)}개 레퍼런스(원본+nobg) Latent Multi-ref 평균 연산...")
         latents = []
-        for p in image_paths:
+        for p in all_paths:
             img = Image.open(p)
             lat = encode_image_to_sd3_latent(pipe, img, seed=seed)
             latents.append(lat)
         return torch.stack(latents, dim=0).mean(dim=0)
+
+    elif ref_mode == "nobg":
+        # nobg 증강 이미지 우선 모드
+        if os.path.exists(concept_aug_dir):
+            nobg_files = glob.glob(os.path.join(concept_aug_dir, "*_nobg.png"))
+            if nobg_files:
+                selected_path = sorted(nobg_files)[0]
+                print(f"  [Ref Mode: nobg] {os.path.basename(selected_path)} 선택됨")
+                img = Image.open(selected_path)
+                return encode_image_to_sd3_latent(pipe, img, seed=seed)
+        
+        selected_path = image_paths[0]
+        print(f"  [Ref Mode: nobg fallback -> first] {os.path.basename(selected_path)} 선택됨")
+        img = Image.open(selected_path)
+        return encode_image_to_sd3_latent(pipe, img, seed=seed)
 
     else:  # first
         selected_path = image_paths[0]
@@ -198,25 +318,36 @@ def get_reference_latent(
 
 
 # ==============================================================================
-# 3. Hybrid Pipeline Loader & Execution
+# 3. Hybrid Inversion & Generation Pipeline
 # ==============================================================================
 
-def load_hybrid_pipeline(checkpoint_dir: str, device_type: str = "cuda"):
+def load_hybrid_pipeline(checkpoint_dir: str, device_type: str = "cuda", enable_t5: bool = True):
     model_id = "stabilityai/stable-diffusion-3.5-medium"
     hf_token = os.getenv("HF_TOKEN")
     dtype = torch.bfloat16 if (device_type == "cuda" and torch.cuda.is_bf16_supported()) else torch.float32
 
-    print(f"📦 SD3.5-medium 로딩 중 ({model_id})...")
-    pipeline = StableDiffusion3Pipeline.from_pretrained(
-        model_id,
-        text_encoder_3=None,
-        tokenizer_3=None,
-        torch_dtype=dtype,
-        token=hf_token
-    )
+    t5_desc = "T5-XXL 포함" if enable_t5 else "T5 비활성화"
+    print(f"📦 SD3.5-medium 로딩 중 ({model_id}, {t5_desc})...")
+
+    if enable_t5:
+        pipeline = StableDiffusion3Pipeline.from_pretrained(
+            model_id,
+            torch_dtype=dtype,
+            token=hf_token
+        )
+    else:
+        pipeline = StableDiffusion3Pipeline.from_pretrained(
+            model_id,
+            text_encoder_3=None,
+            tokenizer_3=None,
+            torch_dtype=dtype,
+            token=hf_token
+        )
+
+    base_scheduler_config = dict(pipeline.scheduler.config)
 
     if os.path.exists(checkpoint_dir):
-        print(f"🔗 LoRA 가중치 주입: {checkpoint_dir}")
+        print(f"🔗 LoRA 가중치 로드 중: {checkpoint_dir}")
         try:
             pipeline.transformer = PeftModel.from_pretrained(
                 pipeline.transformer,
@@ -225,10 +356,11 @@ def load_hybrid_pipeline(checkpoint_dir: str, device_type: str = "cuda"):
             )
             print("✓ PeftModel LoRA 가중치 주입 완료!")
         except Exception as e:
+            print(f"⚠️ PeftModel 로드 대체 시도 (pipeline.load_lora_weights): {e}")
             pipeline.load_lora_weights(checkpoint_dir)
-            print(f"✓ pipeline.load_lora_weights 완료! ({e})")
+            print("✓ pipeline.load_lora_weights 완료!")
     else:
-        print(f"⚠️ LoRA 체크포인트 없음: {checkpoint_dir}. Base 모델로 실행합니다.")
+        print(f"[경고] LoRA 체크포인트를 찾을 수 없습니다: {checkpoint_dir}. Base 모델로 실행합니다.")
 
     if device_type == "cuda":
         total_vram = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
@@ -239,8 +371,6 @@ def load_hybrid_pipeline(checkpoint_dir: str, device_type: str = "cuda"):
     else:
         pipeline = pipeline.to("cpu")
 
-    base_scheduler_config = dict(pipeline.scheduler.config)
-    pipeline.set_progress_bar_config(desc="Hybrid Inverting & Generating")
     return pipeline, base_scheduler_config
 
 
@@ -249,15 +379,19 @@ def run_hybrid_for_concept(
     base_scheduler_config: dict,
     concept: str,
     dataset_dir: str = "./dataset",
+    aug_dir: str = "./augmentation",
     prompts_dir: str = "./prompt",
-    output_dir: str = "./experiments/04_lora_rf_hybrid",
+    output_dir: str = "./experiments/06_hybrid_adaptive",
     instance_token: str = "sks",
-    ref_mode: str = "first",
+    ref_mode: str = "avg",
+    eta_schedule: str = "adaptive",
+    scheduler_type: str = "euler",
     tau: float = 0.7,
     eta: float = 0.8,
     gamma: float = 0.5,
     num_inference_steps: int = 28,
     guidance_scale: float = 7.0,
+    use_concept_negative: bool = True,
     seed: int = 42,
 ):
     if concept not in CLASS_PROMPT:
@@ -265,7 +399,6 @@ def run_hybrid_for_concept(
         return
 
     class_word = CLASS_PROMPT[concept]
-    concept_data_dir = os.path.join(dataset_dir, concept)
     prompt_file = os.path.join(prompts_dir, f"{concept}.txt")
 
     if not os.path.exists(prompt_file):
@@ -279,73 +412,90 @@ def run_hybrid_for_concept(
     os.makedirs(concept_out_dir, exist_ok=True)
 
     device = pipeline._execution_device
-    print(f"\n========================================================")
-    print(f"▶ [{concept}] LoRA + Controlled ODE Hybrid 파이프라인 가동")
-    print(f"  - Class: '{class_word}', Token: '{instance_token}' | Ref Mode: {ref_mode}")
-    print(f"  - Steps: {num_inference_steps} | CFG: {guidance_scale} | tau: {tau}, eta: {eta}")
-    print(f"========================================================")
+    token_word = f"{instance_token} {class_word}"
 
-    # 1. Reference Latent 추출
-    image_latent = get_reference_latent(pipeline, concept_data_dir, ref_mode=ref_mode, seed=seed)
+    if use_concept_negative and concept in DEFAULT_NEGATIVE_PROMPTS:
+        neg_prompt = DEFAULT_NEGATIVE_PROMPTS[concept]
+    else:
+        neg_prompt = "low quality, bad resolution, blurry, distorted, bad anatomy"
 
-    # 2. Controlled ODE Inversion (LoRA 모델 기반 역추적)
-    print(f"\n[Step 1/2] LoRA 결합 Controlled Inversion 수행 중...")
-    prior_reference = torch.randn(
-        image_latent.shape,
-        generator=torch.Generator(device=device).manual_seed(seed),
-        device=image_latent.device,
-        dtype=image_latent.dtype,
+    print(f"\n▶ [{concept}] LoRA + Controlled ODE Hybrid 파이프라인 시작 (Class: '{class_word}', Scheduler: '{scheduler_type}')")
+
+    # 1. 레퍼런스 Latent 추출
+    ref_latent = get_reference_latent(
+        pipe=pipeline,
+        concept=concept,
+        dataset_dir=dataset_dir,
+        aug_dir=aug_dir,
+        ref_mode=ref_mode,
+        seed=seed
+    ).to(device=device, dtype=pipeline.vae.dtype)
+
+    # 2. Controlled ODE Inversion (Sampled Prior Latent 역추적)
+    print("  [Step 1] Inversion: 레퍼런스 Latent -> Inverted Noise Latent 계산 중...")
+    inversion_scheduler = ControlledODEInversion.from_config(base_scheduler_config)
+    inversion_scheduler.set(
+        reference=torch.randn_like(ref_latent, generator=torch.Generator(device=device).manual_seed(seed)),
+        tau=0.0,
+        eta=gamma
     )
-    rf_inversion_scheduler = ControlledODEInversion.from_config(base_scheduler_config)
-    rf_inversion_scheduler.set(prior_reference, tau=0.0, eta=gamma)
-    pipeline.scheduler = rf_inversion_scheduler
+    pipeline.scheduler = inversion_scheduler
+    pipeline.set_progress_bar_config(desc="Inversion")
 
-    inverted_latent = pipeline(
-        prompt="",  # null-text inversion
-        num_inference_steps=num_inference_steps,
-        height=512,
-        width=512,
-        guidance_scale=1.0,
-        latents=image_latent,
-        output_type="latent",
-    ).images.detach()
+    with torch.no_grad():
+        inv_out = pipeline(
+            prompt=f"a photo of {token_word}",
+            guidance_scale=1.0,
+            num_inference_steps=num_inference_steps,
+            output_type="latent",
+            latents=ref_latent,
+        )
+        inverted_latent = inv_out.images.clone()
 
-    print(f"✓ Hybrid Inversion 완료! (Inverted Latent Mean: {inverted_latent.float().mean().item():.4f})")
-
-    # 3. LoRA + Controlled ODE Generation (프롬프트 적응 + 외형 보정)
-    print(f"\n[Step 2/2] 10개 프롬프트 기반 하이브리드 생성 시작...")
-    controlled_scheduler = ControlledODE.from_config(base_scheduler_config)
-    controlled_scheduler.set(image_latent, tau=tau, eta=eta)
-    pipeline.scheduler = controlled_scheduler
+    # 3. 10개 프롬프트 순차 생성 (Controlled ODE Generation)
+    print(f"  [Step 2] Generation: 10개 테스트 프롬프트 이미지 생성 (tau={tau}, eta={eta}, schedule={eta_schedule})...")
 
     for idx, raw_p in enumerate(prompts_raw):
-        token_word = f"{instance_token} {class_word}"
         prompt_text = raw_p.replace("{}", token_word)
         out_path = os.path.join(concept_out_dir, f"{idx}.png")
-        print(f"  [{idx}/9] 프롬프트: \"{prompt_text}\"")
+        print(f"    [{idx}/9] 프롬프트: \"{prompt_text}\"")
+
+        # Scheduler 재설정
+        if scheduler_type == "heun":
+            gen_scheduler = ControlledHeunODE.from_config(base_scheduler_config)
+        else:
+            gen_scheduler = ControlledODE.from_config(base_scheduler_config)
+
+        gen_scheduler.set(
+            reference=ref_latent,
+            tau=tau,
+            eta=eta,
+            schedule=eta_schedule
+        )
+        pipeline.scheduler = gen_scheduler
+        pipeline.set_progress_bar_config(desc=f"Generating [{idx}/9]")
 
         generator = torch.Generator(device=device).manual_seed(seed + idx)
 
-        image = pipeline(
-            prompt=prompt_text,
-            negative_prompt="low quality, bad resolution, blurry, distorted, bad anatomy",
-            num_inference_steps=num_inference_steps,
-            height=512,
-            width=512,
-            guidance_scale=guidance_scale,
-            generator=generator,
-            latents=inverted_latent,
-        ).images[0]
+        with torch.no_grad():
+            gen_img = pipeline(
+                prompt=prompt_text,
+                negative_prompt=neg_prompt,
+                num_inference_steps=num_inference_steps,
+                height=512,
+                width=512,
+                guidance_scale=guidance_scale,
+                latents=inverted_latent.clone(),
+                generator=generator
+            ).images[0]
 
-        image.save(out_path)
-        print(f"      -> 생성 및 저장 완료: {out_path}")
+        gen_img.save(out_path)
+        print(f"        -> 저장 완료: {out_path}")
 
-    # 원본 스케줄러 복구
-    pipeline.scheduler = FlowMatchEulerDiscreteScheduler.from_config(base_scheduler_config)
-    print(f"✓ [{concept}] 10장 이미지 생성 완료 -> {concept_out_dir}")
+    print(f"✓ [{concept}] 10장 생성 완료 -> {concept_out_dir}")
 
 
-def run_evaluation(concept: str, dataset_dir: str = "./dataset", prompts_dir: str = "./prompt", generated_dir: str = "./experiments/04_lora_rf_hybrid"):
+def run_evaluation(concept: str, dataset_dir: str = "./dataset", prompts_dir: str = "./prompt", generated_dir: str = "./experiments/06_hybrid_adaptive"):
     print(f"\n📊 [{concept}] CLIP Evaluation 측정 중...")
     cmd = [
         sys.executable,
@@ -371,28 +521,33 @@ def run_evaluation(concept: str, dataset_dir: str = "./dataset", prompts_dir: st
         return None, None
 
 
-# ==============================================================================
-# 4. Main Entry Point
-# ==============================================================================
-
 def main():
-    parser = argparse.ArgumentParser(description="SD3.5 LoRA + RF-Inversion Hybrid Customization (Iter 4)")
+    parser = argparse.ArgumentParser(description="SD3.5 LoRA + RF-Inversion Hybrid Generation & Evaluation")
     parser.add_argument("--concept", type=str, default="actionfigure_2", help="서브젝트명 ('all' 또는 특정 서브젝트)")
     parser.add_argument("--checkpoints_dir", type=str, default="./checkpoints", help="학습된 LoRA 체크포인트 디렉토리")
+    parser.add_argument("--exp_name", type=str, default="", help="실험 세부 폴더 (지정 시 ./checkpoints/<exp_name>/ 에서 체크포인트 로드)")
     parser.add_argument("--dataset", type=str, default="./dataset", help="레퍼런스 이미지 데이터셋 경로")
+    parser.add_argument("--aug_dir", type=str, default="./augmentation", help="증강 데이터셋 경로")
     parser.add_argument("--prompts", type=str, default="./prompt", help="프롬프트 폴더 경로")
-    parser.add_argument("--output", type=str, default="./experiments/04_lora_rf_hybrid", help="생성 결과 및 보고서 저장 폴더")
+    parser.add_argument("--output", type=str, default="./experiments/06_hybrid_adaptive", help="생성 결과 및 보고서 저장 폴더")
     parser.add_argument("--instance_token", type=str, default="sks", help="인스턴스 토큰")
-    parser.add_argument("--ref_mode", type=str, default="first", choices=["first", "avg", "nobg"], help="레퍼런스 이미지 선택 모드")
+    parser.add_argument("--ref_mode", type=str, default="avg", choices=["avg", "nobg", "first"], help="레퍼런스 이미지 선택 모드")
+    parser.add_argument("--eta_schedule", type=str, default="adaptive", choices=["adaptive", "cosine", "step"], help="Adaptive eta 스케줄")
+    parser.add_argument("--scheduler", type=str, default="euler", choices=["euler", "heun"], help="ODE Solver 스케줄러")
     parser.add_argument("--tau", type=float, default=0.7, help="Controlled generation threshold tau")
     parser.add_argument("--eta", type=float, default=0.8, help="Controlled generation velocity weight eta")
     parser.add_argument("--gamma", type=float, default=0.5, help="Controlled inversion prior weight gamma")
     parser.add_argument("--steps", type=int, default=28, help="인퍼런스 스텝 수")
     parser.add_argument("--cfg", type=float, default=7.0, help="CFG Scale")
+    parser.add_argument("--enable_t5", action="store_true", default=True, help="T5-XXL 활성화")
+    parser.add_argument("--no_t5", action="store_false", dest="enable_t5", help="T5-XXL 비활성화")
+    parser.add_argument("--custom_neg", action="store_true", default=True, help="서브젝트별 맞춤 negative prompt 적용")
     parser.add_argument("--seed", type=int, default=42, help="시드값")
     parser.add_argument("--no_eval", action="store_true", help="자동 평가 비활성화")
 
     args = parser.parse_args()
+
+    actual_checkpoints_dir = os.path.join(args.checkpoints_dir, args.exp_name) if args.exp_name else args.checkpoints_dir
 
     start_time = time.time()
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -406,23 +561,27 @@ def main():
     eval_results = {}
 
     for concept in target_concepts:
-        ckpt_dir = os.path.join(args.checkpoints_dir, f"lora_{concept}")
-        pipeline, base_config = load_hybrid_pipeline(checkpoint_dir=ckpt_dir, device_type=device)
+        ckpt_dir = os.path.join(actual_checkpoints_dir, f"lora_{concept}")
+        pipeline, base_config = load_hybrid_pipeline(checkpoint_dir=ckpt_dir, device_type=device, enable_t5=args.enable_t5)
 
         run_hybrid_for_concept(
             pipeline=pipeline,
             base_scheduler_config=base_config,
             concept=concept,
             dataset_dir=args.dataset,
+            aug_dir=args.aug_dir,
             prompts_dir=args.prompts,
             output_dir=args.output,
             instance_token=args.instance_token,
             ref_mode=args.ref_mode,
+            eta_schedule=args.eta_schedule,
+            scheduler_type=args.scheduler,
             tau=args.tau,
             eta=args.eta,
             gamma=args.gamma,
             num_inference_steps=args.steps,
             guidance_scale=args.cfg,
+            use_concept_negative=args.custom_neg,
             seed=args.seed
         )
 
@@ -442,21 +601,38 @@ def main():
 
     elapsed = time.time() - start_time
 
-    # 종합 평가 요약 저장
+    # 전체 평가 요약 및 파일 저장
     if eval_results:
-        avg_t2i = round(sum(v["t2i"] for v in eval_results.values()) / len(eval_results), 4)
-        avg_i2i = round(sum(v["i2i"] for v in eval_results.values()) / len(eval_results), 4)
+        out_json_path = os.path.join(args.output, "eval_summary.json")
+        out_md_path = os.path.join(args.output, "EVALUATION_REPORT.md")
+
+        all_scores = {}
+        if os.path.exists(out_json_path):
+            try:
+                with open(out_json_path, "r", encoding="utf-8") as f:
+                    old_data = json.load(f)
+                all_scores.update(old_data.get("per_concept_scores", {}))
+            except Exception:
+                pass
+        all_scores.update(eval_results)
+
+        avg_t2i = round(sum(v["t2i"] for v in all_scores.values()) / len(all_scores), 4)
+        avg_i2i = round(sum(v["i2i"] for v in all_scores.values()) / len(all_scores), 4)
 
         summary_data = {
-            "method": "LoRA + RF-Inversion Hybrid",
+            "method": "SD3.5 LoRA + Controlled ODE Hybrid",
             "instance_token": args.instance_token,
-            "ref_mode": args.ref_mode,
             "hyperparameters": {
                 "steps": args.steps,
                 "cfg": args.cfg,
                 "tau": args.tau,
                 "eta": args.eta,
                 "gamma": args.gamma,
+                "ref_mode": args.ref_mode,
+                "eta_schedule": args.eta_schedule,
+                "scheduler": args.scheduler,
+                "custom_neg": args.custom_neg,
+                "enable_t5": args.enable_t5,
                 "seed": args.seed,
             },
             "elapsed_seconds": round(elapsed, 2),
@@ -465,9 +641,10 @@ def main():
                 "CLIP-I": avg_i2i,
                 "CLIP-Total": round(avg_t2i + avg_i2i, 4),
             },
-            "per_concept_scores": eval_results
+            "per_concept_scores": all_scores
         }
 
+        # JSON & Markdown 동시 저장
         out_json_path = os.path.join(args.output, "eval_summary.json")
         out_md_path = os.path.join(args.output, "EVALUATION_REPORT.md")
 
@@ -475,11 +652,11 @@ def main():
             json.dump(summary_data, f, indent=2, ensure_ascii=False)
 
         report_content = (
-            "# 📊 Subject-driven LoRA + RF-Inversion Hybrid Evaluation Report (Iter 4)\n\n"
+            f"# 📊 Subject-driven LoRA + RF-Inversion Hybrid Evaluation Report\n\n"
             f"- **실행 일시**: {time.strftime('%Y-%m-%d %H:%M:%S')}\n"
             f"- **소요 시간**: {elapsed:.1f}초 ({elapsed/60:.1f}분)\n"
-            f"- **방법론**: `LoRA Fine-Tuning + Controlled ODE Inversion Hybrid`\n"
-            f"- **하이퍼파라미터**: Steps={args.steps}, CFG={args.cfg}, tau={args.tau}, eta={args.eta}, Token='{args.instance_token}'\n\n"
+            f"- **방법론**: `LoRA Fine-Tuning + Controlled ODE Inversion Hybrid ({args.eta_schedule} eta, {args.ref_mode} ref)`\n"
+            f"- **하이퍼파라미터**: Steps={args.steps} ({args.scheduler}), CFG={args.cfg}, tau={args.tau}, eta={args.eta}, Token='{args.instance_token}'\n\n"
             "## 1. 정량 평가 요약 (CLIP Scores)\n\n"
             "| Concept | Text-to-Image (CLIP-T) | Image-to-Image (CLIP-I) | Combined (T+I) |\n"
             "| :--- | :---: | :---: | :---: |\n"
@@ -493,6 +670,44 @@ def main():
         with open(out_md_path, "w", encoding="utf-8") as f:
             f.write(report_content)
 
+        # 재실행 가이드용 README.md 생성
+        exp_readme_path = os.path.join(args.output, "README.md")
+        readme_content = f"""# 🧪 Experiment: {os.path.basename(args.output)}
+
+## 1. 실험 개요 및 방법론
+- **방법론**: `SD3.5 LoRA + Controlled ODE RF-Inversion Hybrid`
+- **스케줄러**: `{args.scheduler}` ({args.steps} steps)
+- **Controlled ODE 설정**: tau={args.tau}, eta={args.eta}, gamma={args.gamma}, eta_schedule={args.eta_schedule}
+- **Reference 모드**: `{args.ref_mode}` (Multi-reference Latent Ensemble)
+- **T5-XXL 텍스트 인코더**: {'활성화' if args.enable_t5 else '비활성화'}
+- **Custom Negative Prompt**: {'적용' if args.custom_neg else '미적용'}
+
+## 2. 재실행(Reproduction) 명령어
+```bash
+python generate_hybrid.py \\
+    --concept all \\
+    --checkpoints_dir {args.checkpoints_dir} \\
+    --output {args.output} \\
+    --ref_mode {args.ref_mode} \\
+    --eta_schedule {args.eta_schedule} \\
+    --scheduler {args.scheduler} \\
+    --tau {args.tau} \\
+    --eta {args.eta} \\
+    --steps {args.steps} \\
+    --enable_t5 \\
+    --custom_neg
+```
+
+## 3. 평가 점수 요약
+- **Text-to-Image (CLIP-T)**: **{avg_t2i:.4f}**
+- **Image-to-Image (CLIP-I)**: **{avg_i2i:.4f}**
+- **Total Combined (T+I)**: **{round(avg_t2i + avg_i2i, 4):.4f}**
+
+> 📌 상세 10개 서브젝트별 22개 점수표: [`EVALUATION_REPORT.md`](file://{os.path.abspath(out_md_path)})
+"""
+        with open(exp_readme_path, "w", encoding="utf-8") as f:
+            f.write(readme_content)
+
         print("\n" + "=" * 70)
         print("                  📈 전체 평가 결과 요약 (CLIP Scores)")
         print("=" * 70)
@@ -505,7 +720,7 @@ def main():
         print("=" * 70)
         print(f"✓ 결과 보고서 저장 완료: {out_json_path}, {out_md_path}")
 
-    print("\n🎉 하이브리드 파이프라인 생성 및 평가 과정이 완료되었습니다!")
+    print("\n🎉 모든 Hybrid 생성 및 평가 과정이 완료되었습니다!")
 
 
 if __name__ == "__main__":

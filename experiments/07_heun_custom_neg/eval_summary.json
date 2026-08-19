@@ -1,0 +1,33 @@
+{
+  "method": "SD3.5 LoRA + Controlled ODE Hybrid",
+  "instance_token": "sks",
+  "hyperparameters": {
+    "steps": 10,
+    "cfg": 7.0,
+    "tau": 0.7,
+    "eta": 0.85,
+    "gamma": 0.5,
+    "ref_mode": "avg",
+    "eta_schedule": "adaptive",
+    "scheduler": "heun",
+    "custom_neg": true,
+    "enable_t5": true,
+    "seed": 42
+  },
+  "elapsed_seconds": 69.41,
+  "average_scores": {
+    "CLIP-T": 0.3302,
+    "CLIP-I": 0.622,
+    "CLIP-Total": 0.9522
+  },
+  "per_concept_scores": {
+    "actionfigure_2": {
+      "t2i": 0.3349,
+      "i2i": 0.4774
+    },
+    "pet_cat5": {
+      "t2i": 0.3255,
+      "i2i": 0.7667
+    }
+  }
+}

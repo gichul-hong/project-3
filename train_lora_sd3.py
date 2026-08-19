@@ -4,18 +4,18 @@ SD3.5-Medium LoRA / DreamBooth Fine-Tuning Pipeline
 A100 40GB 및 VRAM 효율성에 최적화된 Rectified Flow Matching LoRA 학습 스크립트.
 
 특징:
-1. VAE Latent & Text Embedding Pre-caching:
-   학습 전 데이터셋의 모든 이미지와 캡션을 1회 인코딩하여 캐싱하므로 VRAM 소모 극소화 (8~12GB VRAM 사용) 및 초고속 학습.
-2. SD3Transformer2DModel Attention 레이어에 PEFT LoRA 적용.
-3. Rectified Flow Matching Loss (MSE on velocity field).
-4. Diffusers 표준 LoRA (.safetensors) 체크포인트 자동 저장.
+1. VAE Latent & Text Embedding Pre-caching (T5-XXL 선택적 활성화):
+   학습 전 증강 데이터셋의 모든 이미지와 캡션을 1회 인코딩하여 캐싱하므로 VRAM 소모 극소화 (8~12GB VRAM 사용) 및 초고속 학습.
+2. SD3Transformer2DModel Attention 레이어에 PEFT LoRA 적용 (Rank 16 ~ 64+).
+3. Rectified Flow Matching Loss (MSE on velocity field / Logit-Normal weighting).
+4. Diffusers 표준 LoRA (.safetensors) 및 PEFT 체크포인트 이중 자동 저장.
 
 사용법:
     1) 단일 서브젝트 학습 (Fast Test):
-       python train_lora_sd3.py --concept actionfigure_2 --max_train_steps 300 --lr 1e-4
+       python train_lora_sd3.py --concept actionfigure_2 --rank 64 --alpha 64 --steps 300 --enable_t5
 
-    2) 전체 10개 서브젝트 순차 학습:
-       python train_lora_sd3.py --concept all --max_train_steps 300
+    2) 전체 10개 서브젝트 고품질 학습 (Exp-05):
+       python train_lora_sd3.py --concept all --rank 64 --alpha 64 --steps 500 --enable_t5 --exp_name exp05_lora_hq
 """
 
 import argparse
@@ -34,7 +34,9 @@ from torch.utils.data import Dataset, DataLoader
 from tqdm.auto import tqdm
 
 from diffusers import StableDiffusion3Pipeline, SD3Transformer2DModel
+from diffusers.training_utils import compute_density_for_timestep_sampling, compute_loss_weighting_for_sd3
 from peft import LoraConfig, get_peft_model, PeftModel
+from peft.utils import get_peft_model_state_dict
 
 load_dotenv()
 
@@ -95,6 +97,14 @@ class AugmentedConceptDataset(Dataset):
         if not self.samples:
             raise FileNotFoundError(f"데이터셋 이미지를 찾을 수 없습니다: {concept_dir}")
 
+        # _nobg 배경 제거 이미지에 가중치를 부여하여 배경 얽힘 방지 및 피사체 집중 학습
+        weighted_samples = []
+        for img_p, caption in self.samples:
+            weighted_samples.append((img_p, caption))
+            if "nobg" in os.path.basename(img_p):
+                weighted_samples.append((img_p, caption))  # nobg 2x 가중 반영
+        self.samples = weighted_samples
+
     def __len__(self):
         return len(self.samples)
 
@@ -112,10 +122,12 @@ def precompute_embeddings_and_latents(
     dataset: AugmentedConceptDataset,
     device: torch.device,
     dtype: torch.dtype,
+    enable_t5: bool = False,
 ) -> List[Dict[str, torch.Tensor]]:
     """학습 속도와 VRAM 최적화를 위해 VAE Latent와 Text Embedding을 사전에 캐싱"""
     cached_data = []
-    print(f"⚡ VAE Latents 및 Text Embeddings 사전 캐싱 중 (총 {len(dataset)}개 샘플)...")
+    t5_status = "T5-XXL 포함" if enable_t5 else "CLIP-L/G 전용"
+    print(f"⚡ VAE Latents 및 Text Embeddings 사전 캐싱 중 ({t5_status}, 총 {len(dataset)}개 샘플)...")
 
     for i in range(len(dataset)):
         image, caption = dataset[i]
@@ -129,11 +141,11 @@ def precompute_embeddings_and_latents(
         latent = (raw_latent - shift_factor) * scaling_factor
         latent = latent.to(dtype=dtype)
 
-        # 2. Text Embeddings 추출 (CLIP-L & CLIP-G, T5 생략 파이프라인 대응)
+        # 2. Text Embeddings 추출
         prompt_embeds, _, pooled_prompt_embeds, _ = pipe.encode_prompt(
             prompt=caption,
             prompt_2=caption,
-            prompt_3=None,
+            prompt_3=caption if enable_t5 else None,
             device=device,
             do_classifier_free_guidance=False
         )
@@ -156,12 +168,14 @@ def train_concept_lora(
     dataset_dir: str = "./augmentation",
     output_base_dir: str = "./checkpoints",
     instance_token: str = "sks",
-    r: int = 16,
-    lora_alpha: int = 32,
-    lr: float = 1e-4,
-    max_train_steps: int = 300,
+    r: int = 64,
+    lora_alpha: int = 64,
+    lr: float = 5e-5,
+    max_train_steps: int = 1000,
     batch_size: int = 1,
     gradient_accumulation_steps: int = 2,
+    weighting_scheme: str = "flow_shift",
+    enable_t5: bool = True,
     seed: int = 42,
 ):
     if concept not in CLASS_PROMPT:
@@ -177,6 +191,8 @@ def train_concept_lora(
     print(f"🚀 [{concept}] SD3.5 Rectified Flow LoRA 파인튜닝 시작")
     print(f"  - Class: '{class_name}', Token: '{instance_token}'")
     print(f"  - Rank: {r}, Alpha: {lora_alpha}, LR: {lr}, Max Steps: {max_train_steps}")
+    print(f"  - T5 Text Encoder: {'활성화 (T5-XXL 4.7B)' if enable_t5 else '비활성화'}")
+    print(f"  - Weighting Scheme: '{weighting_scheme}'")
     print(f"  - 저장 경로: {output_dir}")
     print("=" * 70)
 
@@ -191,24 +207,35 @@ def train_concept_lora(
     model_id = "stabilityai/stable-diffusion-3.5-medium"
     hf_token = os.getenv("HF_TOKEN")
 
-    print("📦 VAE 및 텍스트 인코더 로드 중...")
-    pipeline = StableDiffusion3Pipeline.from_pretrained(
-        model_id,
-        text_encoder_3=None,
-        tokenizer_3=None,
-        torch_dtype=dtype,
-        token=hf_token
-    ).to(device)
+    print(f"📦 VAE 및 텍스트 인코더 로드 중 (T5={'On' if enable_t5 else 'Off'})...")
+    if enable_t5:
+        pipeline = StableDiffusion3Pipeline.from_pretrained(
+            model_id,
+            torch_dtype=dtype,
+            token=hf_token
+        ).to(device)
+    else:
+        pipeline = StableDiffusion3Pipeline.from_pretrained(
+            model_id,
+            text_encoder_3=None,
+            tokenizer_3=None,
+            torch_dtype=dtype,
+            token=hf_token
+        ).to(device)
 
     dataset = AugmentedConceptDataset(concept_dir, class_name, instance_token)
-    cached_data = precompute_embeddings_and_latents(pipeline, dataset, device, dtype)
+    cached_data = precompute_embeddings_and_latents(pipeline, dataset, device, dtype, enable_t5=enable_t5)
 
     # VAE와 Text Encoder 메모리 해제하여 VRAM 확보
     del pipeline.vae
     del pipeline.text_encoder
     del pipeline.text_encoder_2
+    if hasattr(pipeline, "text_encoder_3") and pipeline.text_encoder_3 is not None:
+        del pipeline.text_encoder_3
     del pipeline.tokenizer
     del pipeline.tokenizer_2
+    if hasattr(pipeline, "tokenizer_3") and pipeline.tokenizer_3 is not None:
+        del pipeline.tokenizer_3
     del pipeline
     torch.cuda.empty_cache()
 
@@ -259,11 +286,22 @@ def train_concept_lora(
         batch_prompt_embeds = torch.stack([cached_data[i]["prompt_embeds"] for i in indices]).to(device=device, dtype=dtype)
         batch_pooled_prompt_embeds = torch.stack([cached_data[i]["pooled_prompt_embeds"] for i in indices]).to(device=device, dtype=dtype)
 
-        # Flow Matching 시간 변수 t ~ Uniform(0, 1) 샘플링
-        # (SD3.5는 shift=3.0 기반 flow schedule 사용)
-        u = torch.rand((batch_size,), device=device, dtype=dtype)
-        shift = 3.0
-        sigmas = shift * u / (1.0 + (shift - 1.0) * u)
+        # Flow Matching 시간 변수 t 샘플링
+        if weighting_scheme == "logit_normal":
+            u = compute_density_for_timestep_sampling(
+                weighting_scheme="logit_normal",
+                batch_size=batch_size,
+                logit_mean=0.0,
+                logit_std=1.0,
+                mode_scale=1.29,
+            ).to(device=device, dtype=dtype)
+            sigmas = u
+        else:
+            # Shift 3.0 flow matching schedule
+            u = torch.rand((batch_size,), device=device, dtype=dtype)
+            shift = 3.0
+            sigmas = shift * u / (1.0 + (shift - 1.0) * u)
+
         timesteps = sigmas * 1000.0  # scale to train timesteps (0~1000)
 
         # 노이즈 샘플링 및 Flow Matching Noisy Latents x_t 구성: x_t = (1-t) x_0 + t x_1
@@ -283,8 +321,13 @@ def train_concept_lora(
             return_dict=False,
         )[0]
 
-        # Flow Matching Loss (MSE on velocity field)
-        loss = F.mse_loss(model_pred.float(), target.float(), reduction="mean")
+        # Flow Matching Loss
+        if weighting_scheme == "logit_normal":
+            weighting = compute_loss_weighting_for_sd3(weighting_scheme="logit_normal", sigmas=sigmas_expanded).to(device=device, dtype=torch.float32)
+            loss = torch.mean((weighting * (model_pred.float() - target.float()) ** 2))
+        else:
+            loss = F.mse_loss(model_pred.float(), target.float(), reduction="mean")
+
         loss = loss / gradient_accumulation_steps
         loss.backward()
 
@@ -296,11 +339,24 @@ def train_concept_lora(
 
         step += 1
         progress_bar.update(1)
-        progress_bar.set_postfix({"loss": f"{loss.item() * gradient_accumulation_steps:.4f}", "lr": f"{lr_scheduler.get_last_lr()[0]:.2e}"})
+        progress_bar.set_postfix({
+            "loss": f"{loss.item() * gradient_accumulation_steps:.4f}",
+            "lr": f"{lr_scheduler.get_last_lr()[0]:.2e}"
+        })
 
-    # 4. LoRA 가중치 저장 (Diffusers 호환 safetensors)
+    # 4. LoRA 가중치 이중 저장 (PEFT format + Diffusers save_lora_weights format)
     print(f"\n💾 LoRA 가중치 저장 중: {output_dir}")
     transformer.save_pretrained(output_dir)
+
+    try:
+        peft_state_dict = get_peft_model_state_dict(transformer)
+        StableDiffusion3Pipeline.save_lora_weights(
+            save_directory=output_dir,
+            transformer_lora_layers=peft_state_dict,
+        )
+        print("✓ Diffusers 표준 LoRA safetensors 저장 완료!")
+    except Exception as e:
+        print(f"⚠️ Diffusers save_lora_weights 보조 저장 스킵: {e}")
 
     # 메타데이터 저장
     meta_info = {
@@ -311,6 +367,8 @@ def train_concept_lora(
         "lora_alpha": lora_alpha,
         "lr": lr,
         "max_train_steps": max_train_steps,
+        "weighting_scheme": weighting_scheme,
+        "enable_t5": enable_t5,
         "base_model": model_id,
     }
     with open(os.path.join(output_dir, "config.json"), "w", encoding="utf-8") as f:
@@ -334,15 +392,19 @@ def train_concept_lora(
 def main():
     parser = argparse.ArgumentParser(description="SD3.5 LoRA Fine-Tuning Pipeline")
     parser.add_argument("--concept", type=str, default="actionfigure_2", help="서브젝트명 ('all' 또는 특정 서브젝트)")
+    parser.add_argument("--dataset", type=str, default="./augmentation", help="증강 데이터셋 경로")
     parser.add_argument("--exp_name", type=str, default="", help="실험 버전명 (지정 시 ./checkpoints/<exp_name>/ 에 저장)")
     parser.add_argument("--output_dir", type=str, default="./checkpoints", help="체크포인트 기본 저장 디렉토리")
     parser.add_argument("--instance_token", type=str, default="sks", help="인스턴스 고유 토큰")
-    parser.add_argument("--rank", type=int, default=16, help="LoRA Rank (기본 16)")
-    parser.add_argument("--alpha", type=int, default=32, help="LoRA Alpha (기본 32)")
-    parser.add_argument("--lr", type=float, default=1e-4, help="Learning Rate (기본 1e-4)")
-    parser.add_argument("--steps", type=int, default=300, help="학습 스텝 수 (기본 300)")
+    parser.add_argument("--rank", type=int, default=64, help="LoRA Rank (기본 64)")
+    parser.add_argument("--alpha", type=int, default=64, help="LoRA Alpha (기본 64)")
+    parser.add_argument("--lr", type=float, default=5e-5, help="Learning Rate (기본 5e-5)")
+    parser.add_argument("--steps", type=int, default=1000, help="학습 스텝 수 (기본 1000)")
     parser.add_argument("--batch_size", type=int, default=1, help="배치 크기")
     parser.add_argument("--grad_accum", type=int, default=2, help="Gradient Accumulation Steps")
+    parser.add_argument("--weighting_scheme", type=str, default="flow_shift", choices=["flow_shift", "logit_normal"], help="Weighting Scheme")
+    parser.add_argument("--enable_t5", action="store_true", default=True, help="T5-XXL 텍스트 인코더 활성화")
+    parser.add_argument("--no_t5", action="store_false", dest="enable_t5", help="T5-XXL 비활성화")
     parser.add_argument("--seed", type=int, default=42, help="시드값")
 
     args = parser.parse_args()
@@ -367,6 +429,8 @@ def main():
             max_train_steps=args.steps,
             batch_size=args.batch_size,
             gradient_accumulation_steps=args.grad_accum,
+            weighting_scheme=args.weighting_scheme,
+            enable_t5=args.enable_t5,
             seed=args.seed,
         )
 
