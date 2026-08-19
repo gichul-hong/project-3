@@ -1,23 +1,35 @@
-# ============================================================
-# VERILUX 프로젝트 실행 환경 (SD3.5-medium + RF-Inversion + CLIP 평가)
-# 대상: Google Colab A100 (권장) / 맥미니 16GB (로컬)
-# ============================================================
+# =================================================================
+# VERILUX (SD3.5-medium Subject-driven Customization) Requirements
+# =================================================================
+# 💡 GPU(CUDA) 가속 PyTorch 설치 방법 (NVIDIA RTX GPU 전용):
+#    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+#
+# 💡 전체 패키지 일괄 설치:
+#    pip install -r requirements.txt
+# =================================================================
 
-# ---- Core: 모델 로드 / 생성 / Inversion / 학습 ----
-torch>=2.2.0
-diffusers>=0.31.0
+# 1. Diffusion & HuggingFace 모델 관련 핵심 엔진 (SD3.5 파이프라인)
+diffusers>=0.30.0
 transformers>=4.44.0
 accelerate>=0.33.0
-safetensors>=0.4.3
+huggingface_hub>=0.24.0
+safetensors>=0.4.0
+sentencepiece>=0.2.0
+protobuf>=3.20.0
 
-# ---- HuggingFace 로그인 / 환경변수(.env) ----
-huggingface_hub>=0.23.0
-python-dotenv>=1.0.0
-
-# ---- 이미지 / 수치 처리 ----
-Pillow>=10.0.0
+# 2. CLIP 평가(evaluation.py) & 이미지 처리
+pillow>=10.0.0
 numpy>=1.24.0
+scipy>=1.10.0
+ftfy>=6.1.0
+regex>=2023.0.0
 
-# ---- 노트북 실행 / 시각화 (선택) ----
-ipython>=8.0.0
+# 3. 데이터 증강(augment_dataset.py) 전처리
+rembg>=2.0.50          # AI 배경 제거 모델 (옵션/권장)
+python-dotenv>=1.0.0    # .env 파일에서 HF_TOKEN 자동 로드
+
+# 4. 주피터 실습 & 시각화 도구
+tqdm>=4.65.0
+matplotlib>=3.7.0
+ipython>=8.12.0
 ipywidgets>=8.0.0

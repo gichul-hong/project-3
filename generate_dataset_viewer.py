@@ -363,18 +363,21 @@ def generate_html(data, output_html_path):
     print(f"✓ Dataset Viewer HTML이 성공적으로 생성되었습니다: {output_html_path}")
 
 
-def start_server(html_path, port=8000):
+def start_server(html_path, host="0.0.0.0", port=8000):
     root_dir = os.path.dirname(os.path.abspath(html_path))
     os.chdir(root_dir)
     
     handler = http.server.SimpleHTTPRequestHandler
-    httpd = socketserver.TCPServer(("", port), handler)
+    httpd = socketserver.TCPServer((host, port), handler)
     
-    url = f"http://localhost:{port}/{os.path.basename(html_path)}"
-    print(f"\n🚀 웹 서버 구동 중: {url}")
+    file_name = os.path.basename(html_path)
+    ext_url = f"http://147.47.201.63:{port}/{file_name}"
+    local_url = f"http://localhost:{port}/{file_name}"
+    
+    print(f"\n🚀 웹 서버 구동 중 (외부 접속 가능):")
+    print(f"  • 외부 IP 접속: {ext_url}")
+    print(f"  • 로컬 접속:    {local_url}")
     print("종료하려면 Ctrl+C를 누르세요.\n")
-    
-    webbrowser.open(url)
     
     try:
         httpd.serve_forever()
@@ -387,7 +390,8 @@ def main():
     parser = argparse.ArgumentParser(description="Dataset Viewer Generator")
     parser.add_argument("--root", type=str, default=r"C:\hong\project-3", help="프로젝트 루트 폴더")
     parser.add_argument("--out", type=str, default="dataset_viewer.html", help="생성할 HTML 파일명")
-    parser.add_argument("--server", action="store_true", help="생성 후 로컬 HTTP 서버 자동 구동")
+    parser.add_argument("--server", action="store_true", help="생성 후 HTTP 서버 자동 구동")
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="바인딩 호스트 주소 (기본 0.0.0.0)")
     parser.add_argument("--port", type=int, default=8000, help="웹 서버 포트 번호")
 
     args = parser.parse_args()
@@ -398,7 +402,7 @@ def main():
     generate_html(data, out_path)
     
     if args.server:
-        start_server(out_path, port=args.port)
+        start_server(out_path, host=args.host, port=args.port)
     else:
         print(f"💡 브라우저에서 direct로 바로 열기: file:///{out_path.replace('\\', '/')}")
 
