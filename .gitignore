@@ -23,9 +23,18 @@ env/
 
 # Model / dataset / generated artifacts (large binaries)
 dataset/
+augmentation/
 generated/
 outputs/
+lora_weights/
+checkpoints/
+scratch/
+wandb/
+runs/
+dataset_viewer.html
 *.zip
+*.tar
+*.tar.gz
 *.safetensors
 *.ckpt
 *.pt
