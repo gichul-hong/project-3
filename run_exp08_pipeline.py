@@ -29,6 +29,17 @@ CONCEPTS = [
 ]
 
 
+def auto_git_push(msg: str):
+    try:
+        print(f"\n🔄 [Git Auto-Sync] '{msg}' 커밋 및 푸시 중...")
+        subprocess.run(["git", "add", "."], check=False)
+        subprocess.run(["git", "commit", "-m", f"chore: {msg}"], check=False)
+        subprocess.run(["git", "push", "origin", "main"], check=False)
+        print("✓ Git 푸시 완료!")
+    except Exception as e:
+        print(f"⚠️ Git 푸시 스킵: {e}")
+
+
 def run_cmd(cmd: list, desc: str):
     print("\n" + "=" * 80)
     print(f"▶ [실행] {desc}")
@@ -69,6 +80,7 @@ def main():
             ],
             "Phase 1: Class Prior 정규화 이미지 고속 생성 (10개 클래스 x 40장)",
         )
+        auto_git_push("complete Phase 1 Class Priors generation")
 
     # Phase 2: True DreamBooth-LoRA Training (10 concepts)
     if not args.skip_train:
@@ -90,6 +102,7 @@ def main():
                 ],
                 f"Phase 2: True DreamBooth-LoRA 학습 [{c}] (Prior Loss lambda=1.0, Rank 64, {args.steps_train} Steps)",
             )
+        auto_git_push("complete Phase 2 True DreamBooth-LoRA 10 concepts training")
 
     # Phase 3: Exp-08 Controlled ODE Inference & CLIP Evaluation (10 concepts)
     for c in CONCEPTS:
@@ -112,6 +125,7 @@ def main():
             ],
             f"Phase 3: Exp-08 DreamBooth + Controlled ODE Heun 50-Step 추론 [{c}]",
         )
+    auto_git_push("complete Phase 3 Exp-08 generation & evaluation")
 
     # Phase 4: Extended Multi-Metric Evaluation across all experiments
     run_cmd(
@@ -123,11 +137,13 @@ def main():
         ],
         "Phase 4: 전체 실험 다차원 정밀 평가 (DINO-v2 + 4대 Taxonomy + Diversity)",
     )
+    auto_git_push("complete Phase 4 extended multi-metric evaluation")
 
     # Phase 5: Experiment Viewer Dashboard 갱신
     print("\n📊 웹 대시보드 (experiment_viewer.html) 갱신 중...")
     subprocess.run([sys.executable, "generate_experiment_viewer.py"])
     print("✓ experiment_viewer.html 갱신 완료!")
+    auto_git_push("complete Phase 5 dashboard & report update")
 
     total_elapsed = time.time() - total_start
     print("\n" + "=" * 80)
