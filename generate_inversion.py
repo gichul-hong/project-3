@@ -525,29 +525,39 @@ def main():
             "per_concept_scores": eval_results
         }
 
-        # JSON 저장
+        # JSON 저장 (results 폴더 및 output 폴더에 동시 보관)
         json_path = os.path.join(args.results_dir, f"eval_{args.method}_{args.ref_mode}.json")
+        out_json_path = os.path.join(args.output, "eval_summary.json")
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(summary_data, f, indent=2, ensure_ascii=False)
+        with open(out_json_path, "w", encoding="utf-8") as f:
+            json.dump(summary_data, f, indent=2, ensure_ascii=False)
 
-        # Markdown 보고서 생성
+        # Markdown 보고서 생성 (results 폴더 및 output 폴더에 동시 보관)
         md_path = os.path.join(args.results_dir, f"EVALUATION_REPORT_{args.method.upper()}.md")
+        out_md_path = os.path.join(args.output, "EVALUATION_REPORT.md")
+        report_content = (
+            f"# 📊 Subject-driven {args.method.upper()}-Inversion Evaluation Report\n\n"
+            f"- **실행 일시**: {time.strftime('%Y-%m-%d %H:%M:%S')}\n"
+            f"- **소요 시간**: {elapsed:.1f}초 ({elapsed/60:.1f}분)\n"
+            f"- **방법론**: `{args.method.upper()}-Inversion` (Ref Mode: `{args.ref_mode}`)\n"
+            f"- **데이터셋 경로**: `{args.dataset}`\n"
+            f"- **하이퍼파라미터**: Steps={args.steps}, CFG={args.cfg}, tau={args.tau}, eta={args.eta}, seed={args.seed}\n\n"
+            "## 1. 정량 평가 요약 (CLIP Scores)\n\n"
+            "| Concept | Text-to-Image (CLIP-T) | Image-to-Image (CLIP-I) | Combined (T+I) |\n"
+            "| :--- | :---: | :---: | :---: |\n"
+        )
+        for c, scores in eval_results.items():
+            tot = round(scores['t2i'] + scores['i2i'], 4)
+            report_content += f"| `{c}` | **{scores['t2i']:.4f}** | **{scores['i2i']:.4f}** | {tot:.4f} |\n"
+        report_content += "| :--- | :---: | :---: | :---: |\n"
+        report_content += f"| **전체 평균 (TOTAL AVG)** | **{avg_t2i:.4f}** | **{avg_i2i:.4f}** | **{round(avg_t2i + avg_i2i, 4):.4f}** |\n\n"
+        report_content += "> 💡 **발표 자료 팁**: ProjectOverview 요구사항에 따라 서브젝트별 10개 값 + 전체 평균 1개 = 총 22개 수치로 정리되어 있습니다.\n"
+
         with open(md_path, "w", encoding="utf-8") as f:
-            f.write(f"# 📊 Subject-driven {args.method.upper()}-Inversion Evaluation Report\n\n")
-            f.write(f"- **실행 일시**: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-            f.write(f"- **소요 시간**: {elapsed:.1f}초 ({elapsed/60:.1f}분)\n")
-            f.write(f"- **방법론**: `{args.method.upper()}-Inversion` (Ref Mode: `{args.ref_mode}`)\n")
-            f.write(f"- **데이터셋 경로**: `{args.dataset}`\n")
-            f.write(f"- **하이퍼파라미터**: Steps={args.steps}, CFG={args.cfg}, tau={args.tau}, eta={args.eta}, seed={args.seed}\n\n")
-            f.write("## 1. 정량 평가 요약 (CLIP Scores)\n\n")
-            f.write("| Concept | Text-to-Image (CLIP-T) | Image-to-Image (CLIP-I) | Combined (T+I) |\n")
-            f.write("| :--- | :---: | :---: | :---: |\n")
-            for c, scores in eval_results.items():
-                tot = round(scores['t2i'] + scores['i2i'], 4)
-                f.write(f"| `{c}` | **{scores['t2i']:.4f}** | **{scores['i2i']:.4f}** | {tot:.4f} |\n")
-            f.write("| :--- | :---: | :---: | :---: |\n")
-            f.write(f"| **전체 평균 (TOTAL AVG)** | **{avg_t2i:.4f}** | **{avg_i2i:.4f}** | **{round(avg_t2i + avg_i2i, 4):.4f}** |\n\n")
-            f.write("> 💡 **발표 자료 팁**: ProjectOverview 요구사항에 따라 서브젝트별 10개 값 + 전체 평균 1개 = 총 22개 수치로 정리되어 있습니다.\n")
+            f.write(report_content)
+        with open(out_md_path, "w", encoding="utf-8") as f:
+            f.write(report_content)
 
         print("\n" + "=" * 70)
         print("                  📈 전체 평가 결과 요약 (CLIP Scores)")
