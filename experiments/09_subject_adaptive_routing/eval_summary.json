@@ -14,11 +14,11 @@
     "enable_t5": true,
     "seed": 42
   },
-  "elapsed_seconds": 145.67,
+  "elapsed_seconds": 150.41,
   "average_scores": {
-    "CLIP-T": 0.3335,
-    "CLIP-I": 0.6687,
-    "CLIP-Total": 1.0022
+    "CLIP-T": 0.3377,
+    "CLIP-I": 0.6747,
+    "CLIP-Total": 1.0124
   },
   "per_concept_scores": {
     "actionfigure_2": {
@@ -32,6 +32,10 @@
     "furniture_sofa2": {
       "t2i": 0.2992,
       "i2i": 0.7954
+    },
+    "instrument_music2": {
+      "t2i": 0.3503,
+      "i2i": 0.6929
     }
   }
 }
