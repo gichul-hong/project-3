@@ -14,11 +14,11 @@
     "enable_t5": true,
     "seed": 42
   },
-  "elapsed_seconds": 146.65,
+  "elapsed_seconds": 143.45,
   "average_scores": {
-    "CLIP-T": 0.3394,
-    "CLIP-I": 0.6757,
-    "CLIP-Total": 1.0151
+    "CLIP-T": 0.3375,
+    "CLIP-I": 0.6969,
+    "CLIP-Total": 1.0344
   },
   "per_concept_scores": {
     "actionfigure_2": {
@@ -36,6 +36,10 @@
     "instrument_music2": {
       "t2i": 0.3545,
       "i2i": 0.6981
+    },
+    "luggage_backpack1": {
+      "t2i": 0.33,
+      "i2i": 0.782
     }
   }
 }
