@@ -65,14 +65,27 @@ CLASS_PROMPT = {
 DEFAULT_NEGATIVE_PROMPTS = {
     "actionfigure_2": "human skin, real human face, photographic skin texture, blurry, distorted joints, bad anatomy, deformed plastic",
     "decoritems_woodenpot": "plastic, metallic, glossy, blurry, low resolution, deformed opening, distorted shape",
-    "furniture_sofa2": "wooden chair, bed, deformed cushions, messy fabric, blurry, distorted legs, bad perspective",
+    "furniture_sofa2": "deformed shape, wrong color, bad perspective, wooden chair, bed, messy fabric, blurry, distorted legs",
     "instrument_music2": "piano, drums, distorted guitar neck, missing strings, extra headstock, blurry, bad anatomy",
     "luggage_backpack1": "handbag, plastic bag, distorted straps, deformed zipper, blurry, bad texture",
-    "person_3": "blurry face, distorted eyes, extra limbs, bad anatomy, deformed fingers, low resolution, cartoon",
+    "person_3": "distorted face, blurry eyes, extra limbs, bad anatomy, deformed fingers, low resolution, cartoon, 3d render, anime",
     "pet_cat5": "dog, ugly fur, distorted whiskers, extra paws, deformed eyes, blurry, bad anatomy",
     "scene_waterfall": "dry rocks, static water, cartoon, low resolution, distorted horizon, messy textures",
-    "transport_tank": "civilian car, distorted tracks, deformed barrel, low resolution, blurry, deformed armor",
+    "transport_tank": "toy, plastic miniature, cartoon, low resolution, blurry, deformed armor, civilian car",
     "wearable_jacket1": "shirt, hoodie, distorted collar, missing zipper, low resolution, blurry, deformed cloth",
+}
+
+CONCEPT_PROMPT_ENHANCERS = {
+    "person_3": "detailed facial features, realistic eyes and skin texture, sharp portrait focus",
+    "transport_tank": "heavy armor plating, realistic metallic surface, highly detailed tracks",
+    "pet_cat5": "fine fur texture, clear feline eyes, realistic whiskers",
+    "actionfigure_2": "smooth plastic texture, intricate figurine joints, studio lighting",
+    "decoritems_woodenpot": "authentic wood grain texture, handcrafted details",
+    "furniture_sofa2": "rich fabric texture, realistic cushions, clean geometry",
+    "instrument_music2": "detailed guitar strings, wooden lacquer finish, clear frets",
+    "luggage_backpack1": "detailed fabric stitching, realistic zippers and straps",
+    "scene_waterfall": "flowing water dynamics, mist spray, highly detailed rock face",
+    "wearable_jacket1": "detailed leather and fabric seams, realistic folds and zipper",
 }
 
 SUBJECT_ROUTING_PARAMS = {
@@ -407,6 +420,7 @@ def run_hybrid_for_concept(
     num_inference_steps: int = 28,
     guidance_scale: float = 7.0,
     use_concept_negative: bool = True,
+    enhance_prompts: bool = False,
     seed: int = 42,
 ):
     if concept not in CLASS_PROMPT:
@@ -472,6 +486,9 @@ def run_hybrid_for_concept(
 
     for idx, raw_p in enumerate(prompts_raw):
         prompt_text = raw_p.replace("{}", token_word)
+        if enhance_prompts and concept in CONCEPT_PROMPT_ENHANCERS:
+            enhancer = CONCEPT_PROMPT_ENHANCERS[concept]
+            prompt_text = f"{prompt_text}, {enhancer}"
         out_path = os.path.join(concept_out_dir, f"{idx}.png")
         print(f"    [{idx}/9] 프롬프트: \"{prompt_text}\"")
 
@@ -558,6 +575,7 @@ def main():
     parser.add_argument("--no_t5", action="store_false", dest="enable_t5", help="T5-XXL 비활성화")
     parser.add_argument("--custom_neg", action="store_true", default=True, help="서브젝트별 맞춤 negative prompt 적용")
     parser.add_argument("--subject_routing", action="store_true", help="서브젝트 특성(Rigid vs Flexible) 기반 tau/eta 동적 라우팅")
+    parser.add_argument("--enhance_prompts", action="store_true", help="서브젝트별 생성 프롬프트 고화질 디테일 수식어 자동 강화")
     parser.add_argument("--seed", type=int, default=42, help="시드값")
     parser.add_argument("--no_eval", action="store_true", help="자동 평가 비활성화")
 
@@ -605,6 +623,7 @@ def main():
             num_inference_steps=args.steps,
             guidance_scale=args.cfg,
             use_concept_negative=args.custom_neg,
+            enhance_prompts=args.enhance_prompts,
             seed=args.seed
         )
 
