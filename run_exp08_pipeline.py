@@ -195,10 +195,10 @@ def main():
                     "--alpha", "64",
                     "--lr", "5e-5",
                     "--steps", str(args.steps_train),
-                    "--prior_weight", "1.0",
+                    "--prior_weight", "0.3",
                     "--enable_t5",
                 ],
-                f"Phase 2: True DreamBooth-LoRA 학습 [{c}] (Prior Loss lambda=1.0, Rank 64, {args.steps_train} Steps)",
+                f"Phase 2: True DreamBooth-LoRA 학습 [{c}] (Prior Loss lambda=0.3, Rank 64, {args.steps_train} Steps)",
             )
 
             # 3) 즉시 구글 드라이브 동기화 및 깃 푸시
@@ -207,7 +207,7 @@ def main():
 
         auto_git_push("complete Phase 2 True DreamBooth-LoRA 10 concepts training")
 
-    # Phase 3: Exp-08 Controlled ODE Inference & CLIP Evaluation (10 concepts)
+    # Phase 3-A: Exp-08 Controlled ODE Inference & CLIP Evaluation (10 concepts)
     exp08_out_dir = "./experiments/08_dreambooth_prior_loss"
     os.makedirs(exp08_out_dir, exist_ok=True)
 
@@ -237,14 +237,52 @@ def main():
                 "--custom_neg",
                 "--seed", "42",
             ],
-            f"Phase 3: Exp-08 DreamBooth + Controlled ODE Heun 50-Step 추론 [{c}]",
+            f"Phase 3-A: Exp-08 DreamBooth + Null-Text Heun 50-Step 추론 [{c}]",
         )
 
         sync_to_drive(os.path.join(exp08_out_dir, c), f"experiments/08_dreambooth_prior_loss/{c}")
         auto_git_push(f"generate exp08 images [{c}]")
 
     sync_to_drive(exp08_out_dir, "experiments/08_dreambooth_prior_loss")
-    auto_git_push("complete Phase 3 Exp-08 generation & evaluation")
+    auto_git_push("complete Phase 3-A Exp-08 generation & evaluation")
+
+    # Phase 3-B: Exp-09 Subject-Aware Dynamic Routing Hybrid Inference (10 concepts)
+    exp09_out_dir = "./experiments/09_subject_adaptive_routing"
+    os.makedirs(exp09_out_dir, exist_ok=True)
+
+    for c in CONCEPTS:
+        gen_imgs = glob.glob(os.path.join(exp09_out_dir, c, "*.png"))
+        if len(gen_imgs) >= 10:
+            print(f"✓ [{c}] Exp-09 생성 이미지 10장 이미 존재 -> 추론 스킵 ({len(gen_imgs)}장)")
+            continue
+
+        run_cmd(
+            [
+                sys.executable,
+                "generate_hybrid.py",
+                "--concept", c,
+                "--checkpoints_dir", "./checkpoints/exp08_dreambooth_lora",
+                "--output", exp09_out_dir,
+                "--dataset", "./dataset",
+                "--aug_dir", "./augmentation",
+                "--prompts", "./prompt",
+                "--ref_mode", "avg",
+                "--eta_schedule", "adaptive",
+                "--scheduler", "heun",
+                "--subject_routing",
+                "--steps", str(args.steps_gen),
+                "--enable_t5",
+                "--custom_neg",
+                "--seed", "42",
+            ],
+            f"Phase 3-B: Exp-09 Subject-Aware Dynamic Routing Heun 50-Step 추론 [{c}]",
+        )
+
+        sync_to_drive(os.path.join(exp09_out_dir, c), f"experiments/09_subject_adaptive_routing/{c}")
+        auto_git_push(f"generate exp09 images [{c}]")
+
+    sync_to_drive(exp09_out_dir, "experiments/09_subject_adaptive_routing")
+    auto_git_push("complete Phase 3-B Exp-09 generation & evaluation")
 
     # Phase 4: Extended Multi-Metric Evaluation across all experiments
     run_cmd(

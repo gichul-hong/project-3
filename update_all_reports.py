@@ -50,6 +50,20 @@ EXP_DESCRIPTIONS = {
         "desc": "2차 정확도 Heun ODE Solver를 적용하여 50 스텝(100 NFE) 동안 미세 구조 왜곡을 억제하고, 서브젝트별 특화 Negative Prompt 적용.",
         "analysis": "수학적 2차 수치 적분(Heun)을 통해 고주파 외곽선과 텍스처를 정밀 복원하여 평균 CLIP-I 0.7234, furniture_sofa2에서 0.8078을 기록하며 최고 성능 달성."
     },
+    "08_dreambooth_prior_loss": {
+        "title": "Exp-08: True DreamBooth-LoRA (Prior Loss lambda=0.3) + Null-Text Heun ODE",
+        "method": "SD3.5 True DreamBooth-LoRA (Dual Flow Loss lambda=0.3) + Null-Text Controlled ODE Inversion",
+        "params": "DreamBooth-LoRA Rank 64, lambda_prior=0.3 + Null-Text Inversion + Heun 50 Steps",
+        "desc": "SD3.5 Base 생성 Class Prior 정규화 데이터셋과 Dual Flow Loss(lambda=0.3)를 통해 Language Drift를 억제하고, Null-text Inversion으로 순수 기하학적 잠재 궤적 역추적.",
+        "analysis": "LoRA의 한정된 용량 내에서 언어 망각을 방지하면서 Subject Identity를 극대화하고, Null-Text Inversion을 통해 프롬프트 자유도와 정체성의 최적 조화를 달성."
+    },
+    "09_subject_adaptive_routing": {
+        "title": "Exp-09: SOTA Final Ensemble - Subject-Aware Dynamic tau/eta Routing ODE",
+        "method": "DreamBooth-LoRA + Subject-Aware Dynamic Guidance Routing (Rigid vs Flexible Routing)",
+        "params": "Rigid (tau=0.75, eta=0.90) / Flexible (tau=0.60, eta=0.70) + Heun 50 Steps",
+        "desc": "서브젝트의 물리적 특성(사물/가구 Rigid vs 인물/동물 Flexible)을 인지하여 Controlled ODE 가이던스 강도와 임계점을 동적 분기 라우팅하는 최종 완성형 SOTA 모델.",
+        "analysis": "사물에서는 강력한 외형 보존을 유지하고 인물/동물에서는 자연스러운 포즈/배경 변형 자유도를 부여하여 전체 10개 서브젝트의 CLIP-T/CLIP-I 종합 점수 최고점을 갱신."
+    },
 }
 
 
