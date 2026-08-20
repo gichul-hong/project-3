@@ -14,11 +14,11 @@
     "enable_t5": true,
     "seed": 42
   },
-  "elapsed_seconds": 143.22,
+  "elapsed_seconds": 145.67,
   "average_scores": {
-    "CLIP-T": 0.3506,
-    "CLIP-I": 0.6053,
-    "CLIP-Total": 0.9559
+    "CLIP-T": 0.3335,
+    "CLIP-I": 0.6687,
+    "CLIP-Total": 1.0022
   },
   "per_concept_scores": {
     "actionfigure_2": {
@@ -28,6 +28,10 @@
     "decoritems_woodenpot": {
       "t2i": 0.3616,
       "i2i": 0.6646
+    },
+    "furniture_sofa2": {
+      "t2i": 0.2992,
+      "i2i": 0.7954
     }
   }
 }
