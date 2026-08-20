@@ -89,17 +89,17 @@ CONCEPT_PROMPT_ENHANCERS = {
 }
 
 SUBJECT_ROUTING_PARAMS = {
-    # Rigid / Object / Artifact concepts: structure preservation is key
+    # High-Identity Retention Targets (Rigid objects & Identity-critical human/figurine)
+    "person_3": {"tau": 0.75, "eta": 0.90},        # Identity-critical human face geometry retention
     "furniture_sofa2": {"tau": 0.75, "eta": 0.90},
     "decoritems_woodenpot": {"tau": 0.75, "eta": 0.90},
     "instrument_music2": {"tau": 0.75, "eta": 0.90},
     "transport_tank": {"tau": 0.75, "eta": 0.90},
+    "actionfigure_2": {"tau": 0.70, "eta": 0.85},  # Distinctive figurine mold/paint retention
     "luggage_backpack1": {"tau": 0.75, "eta": 0.85},
     "wearable_jacket1": {"tau": 0.75, "eta": 0.85},
-    # Flexible / Dynamic / Biological / Scene concepts: prompt/pose flexibility is key
-    "person_3": {"tau": 0.60, "eta": 0.70},
-    "pet_cat5": {"tau": 0.60, "eta": 0.70},
-    "actionfigure_2": {"tau": 0.65, "eta": 0.75},
+    # Flexible / Natural / Biological / Landscape concepts: balanced pose/scene freedom
+    "pet_cat5": {"tau": 0.65, "eta": 0.75},
     "scene_waterfall": {"tau": 0.65, "eta": 0.75},
 }
 
