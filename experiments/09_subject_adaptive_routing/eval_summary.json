@@ -14,16 +14,20 @@
     "enable_t5": true,
     "seed": 42
   },
-  "elapsed_seconds": 144.96,
+  "elapsed_seconds": 143.22,
   "average_scores": {
-    "CLIP-T": 0.3396,
-    "CLIP-I": 0.546,
-    "CLIP-Total": 0.8856
+    "CLIP-T": 0.3506,
+    "CLIP-I": 0.6053,
+    "CLIP-Total": 0.9559
   },
   "per_concept_scores": {
     "actionfigure_2": {
       "t2i": 0.3396,
       "i2i": 0.546
+    },
+    "decoritems_woodenpot": {
+      "t2i": 0.3616,
+      "i2i": 0.6646
     }
   }
 }
