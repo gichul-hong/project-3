@@ -1,4 +1,6 @@
-# 🏆 Project Final Evaluation & Benchmark Report
+import os
+
+eval_report_content = """# 🏆 Project Final Evaluation & Benchmark Report
 ## Multi-Subject Personalization via SD3.5 Flow-Matching & Controlled Inversion
 
 > **과제명**: Subject-driven Multi-Concept Customization (VERILUX Term Project)  
@@ -32,7 +34,7 @@ graph LR
 2. **2차 Heun Predictor-Corrector ODE Solver 도입**:
    - 1차 오일러 적분의 누적 오차 $\mathcal{O}(\Delta t)$를 2차 Heun $\mathcal{O}(\Delta t^2)$로 대체하여 50 스텝 동안 100회의 함수 평가(NFE)를 수행, 고주파 텍스처와 미세 외곽선의 왜곡을 극소화했습니다.
 3. **Multi-Ref Latent Aggregation vs Single Foreground Reference 트레이드오프 규명**:
-   - 10장의 참조 이미지 Latent 평균 $ar{z}_{ref} = rac{1}{N}\sum z_i$ 은 정적 물체(`sofa`, `woodenpot`)의 배경 노이즈를 완벽 상쇄하나, 인물(`person_3`)의 경우 각도/시선 차이에 의한 위상 간섭으로 얼굴 윤곽이 부드러워짐을 발견하여, 서브젝트 유형별 최적 레퍼런스 선택 가이드를 정립했습니다.
+   - 10장의 참조 이미지 Latent 평균 $\bar{z}_{ref} = \frac{1}{N}\sum z_i$ 은 정적 물체(`sofa`, `woodenpot`)의 배경 노이즈를 완벽 상쇄하나, 인물(`person_3`)의 경우 각도/시선 차이에 의한 위상 간섭으로 얼굴 윤곽이 부드러워짐을 발견하여, 서브젝트 유형별 최적 레퍼런스 선택 가이드를 정립했습니다.
 
 ---
 
@@ -42,14 +44,14 @@ graph LR
 
 | 실험 ID | 실험명 (Experiment Name) | 학습 기법 및 데이터 | 추론 및 하이브리드 제어 알고리즘 | 공식 CLIP-T (↑) | 공식 CLIP-I (↑) | Total Score (T+I) | 산출물 디렉토리 |
 | :--- | :--- | :--- | :--- | :---: | :---: | :---: | :--- |
-| **Exp-01** | RF-Inversion Baseline | 원본 5장 (`./dataset`) | Controlled ODE Inversion (단일 Ref, $	au=0.7, \eta=0.9$) | 0.2950 | **0.7831** | **1.0781** | [01_rf_inversion_baseline/](file:///content/project-3/experiments/01_rf_inversion_baseline/) |
+| **Exp-01** | RF-Inversion Baseline | 원본 5장 (`./dataset`) | Controlled ODE Inversion (단일 Ref, $\tau=0.7, \eta=0.9$) | 0.2950 | **0.7831** | **1.0781** | [01_rf_inversion_baseline/](file:///content/project-3/experiments/01_rf_inversion_baseline/) |
 | **Exp-03** | Augmented SD3.5 LoRA | 5종 증강 (`./augmentation`) | LoRA 순수 추론 (Rank 16, 200 Steps) | **0.3332** | 0.6645 | 0.9977 | [03_lora_augmented/](file:///content/project-3/experiments/03_lora_augmented/) |
-| **Exp-04** | LoRA + RF-Inversion Hybrid | 5종 증강 (`./augmentation`) | LoRA + Controlled ODE 결합 ($	au=0.7, \eta=0.8$) | 0.3082 | 0.7634 | 1.0716 | [04_lora_rf_hybrid/](file:///content/project-3/experiments/04_lora_rf_hybrid/) |
+| **Exp-04** | LoRA + RF-Inversion Hybrid | 5종 증강 (`./augmentation`) | LoRA + Controlled ODE 결합 ($\tau=0.7, \eta=0.8$) | 0.3082 | 0.7634 | 1.0716 | [04_lora_rf_hybrid/](file:///content/project-3/experiments/04_lora_rf_hybrid/) |
 | **Exp-05** | LoRA High-Quality | T5-XXL + Rank 64 (1,000 Steps) | LoRA HQ 순수 추론 (Steps 28, CFG 7.0) | 0.3239 | 0.6731 | 0.9970 | [05_lora_hq/](file:///content/project-3/experiments/05_lora_hq/) |
 | **Exp-06** | Hybrid Adaptive Multi-ref | T5-XXL + Rank 64 (1,000 Steps) | Multi-ref Latent Avg + Cosine Adaptive $\eta$ | 0.3241 | 0.7192 | 1.0433 | [06_hybrid_adaptive/](file:///content/project-3/experiments/06_hybrid_adaptive/) |
 | **Exp-07** | Heun 50-Step Custom Neg | T5-XXL + Rank 64 (1,000 Steps) | Heun 2차 ODE Solver (50 Steps) + Custom Neg | 0.3224 | 0.7234 | 1.0458 | [07_heun_custom_neg/](file:///content/project-3/experiments/07_heun_custom_neg/) |
 | **Exp-08** | **True DreamBooth Prior Loss** | **Class Prior (400장) + $\mathcal{L}_{prior}$** | **Exp-07 Heun 50-Step + Adaptive Multi-ref ODE** | 0.3273 | 0.6948 | 1.0221 | [08_dreambooth_prior_loss/](file:///content/project-3/experiments/08_dreambooth_prior_loss/) |
-| **Exp-09** | **Subject Adaptive Routing** | **DreamBooth LoRA (Exp-08)** | **동적 라우팅($	au, \eta$) + 프롬프트 디테일 강화** | 0.3268 | 0.6908 | 1.0176 | [09_subject_adaptive_routing/](file:///content/project-3/experiments/09_subject_adaptive_routing/) |
+| **Exp-09** | **Subject Adaptive Routing** | **DreamBooth LoRA (Exp-08)** | **동적 라우팅($\tau, \eta$) + 프롬프트 디테일 강화** | 0.3268 | 0.6908 | 1.0176 | [09_subject_adaptive_routing/](file:///content/project-3/experiments/09_subject_adaptive_routing/) |
 
 ### 2-2. 정밀 확장 다차원 평가 (CLIP-ViT-L/14 & DINOv2-ViT-S/14 & Diversity)
 
@@ -113,13 +115,13 @@ pie title 100개 테스트 프롬프트 과업 구성비
 
 ### 1) Dual Flow Loss Prior Preservation
 Rectified Flow Matching 파이프라인에서 인스턴스 손실과 클래스 사전 보존 손실의 결합:
-$$\mathcal{L}_{flow} = \mathbb{E}_{t, x_{inst}, c_{inst}} \left[ \| v_	heta(x_t, t, c_{inst}) - (x_{inst} - \epsilon) \|^2 ight] + \lambda_{prior} \mathbb{E}_{t, x_{prior}, c_{class}} \left[ \| v_	heta(x_{t, prior}, t, c_{class}) - (x_{prior} - \epsilon) \|^2 ight]$$
+$$\mathcal{L}_{flow} = \mathbb{E}_{t, x_{inst}, c_{inst}} \left[ \| v_\theta(x_t, t, c_{inst}) - (x_{inst} - \epsilon) \|^2 \right] + \lambda_{prior} \mathbb{E}_{t, x_{prior}, c_{class}} \left[ \| v_\theta(x_{t, prior}, t, c_{class}) - (x_{prior} - \epsilon) \|^2 \right]$$
 - $\lambda_{prior} = 0.3$ 설정 시 텍스트 지식 망각 없이 피사체 고유 식별자(`sks`)가 클래스 토큰(`person`, `cat` 등)과 자연스럽게 분리 학습됨.
 
 ### 2) Heun 2nd-Order Predictor-Corrector ODE Inversion
-시간 $t \in [	au, 0]$ 구간에서 2단계 근사를 통한 궤적 보정:
-$$	ilde{z}_{t - \Delta t} = z_t - \Delta t \cdot v_	heta(z_t, t, c)$$
-$$z_{t - \Delta t} = z_t - rac{\Delta t}{2} \left[ v_	heta(z_t, t, c) + v_	heta(	ilde{z}_{t - \Delta t}, t - \Delta t, c) ight] + \eta(t) \cdot (z_{ref, t - \Delta t} - z_{t - \Delta t})$$
+시간 $t \in [\tau, 0]$ 구간에서 2단계 근사를 통한 궤적 보정:
+$$\tilde{z}_{t - \Delta t} = z_t - \Delta t \cdot v_\theta(z_t, t, c)$$
+$$z_{t - \Delta t} = z_t - \frac{\Delta t}{2} \left[ v_\theta(z_t, t, c) + v_\theta(\tilde{z}_{t - \Delta t}, t - \Delta t, c) \right] + \eta(t) \cdot (z_{ref, t - \Delta t} - z_{t - \Delta t})$$
 - 예측자(Predictor)와 보정자(Corrector)의 평균 벡터장을 사용하여 고주파 성분의 찌그러짐을 방지함.
 
 ---
@@ -130,3 +132,12 @@ $$z_{t - \Delta t} = z_t - rac{\Delta t}{2} \left[ v_	heta(z_t, t, c) + v_	heta
 * **체크포인트 저장소**: `checkpoints/exp08_dreambooth_lora/` (10종, ~2.2GB)
 * **Google Drive 백업 스냅샷**: `/content/drive/MyDrive/project-3-snapshots/snapshot_20260820_032319_exp08_exp09_final/`
 * **GitHub 원격 저장소**: `https://github.com/gichul-hong/project-3.git` (`main` 최신 커밋 반영)
+"""
+
+with open("EVALUATION_REPORT.md", "w", encoding="utf-8") as f:
+    f.write(eval_report_content)
+
+with open("docs/EXPERIMENT_HISTORY.md", "w", encoding="utf-8") as f:
+    f.write(eval_report_content)
+
+print("✓ All evaluation reports generated and synchronized successfully!")
