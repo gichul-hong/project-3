@@ -1,6 +1,6 @@
 """
-Script to build the comprehensive team baseline Jupyter Notebook (team_baseline_guide.ipynb).
-Includes detailed markdown documentation, diagrams, inference, training, evaluation, and troubleshooting.
+Script to build the comprehensive team baseline Jupyter Notebook (baseline_pipeline_guide.ipynb).
+Includes detailed markdown documentation, checkpoint lineage, diagrams, inference, training, evaluation, and troubleshooting.
 """
 
 import json
@@ -80,7 +80,7 @@ def create_notebook():
 1. **High-Speed 28-Step Euler Controlled ODE**:
    - 1차 오일러 적분 기반 벡터장 가이던스를 구현하여 기존 50스텝(7.5분/서브젝트) 대비 **연산 속도를 2.5배 가속(1.2분/서브젝트)**.
 2. **구면 보간(Spherical Blend) 분산 보존**:
-   - 선형 보간의 분산 감쇄($\sqrt{(1-s)^2+s^2} < 1$) 문제를 $\sqrt{1-s^2} \cdot a + s \cdot n$ 구면 보간으로 해결하여 모든 후보 시드가 1.0 표준편차의 고주파 텍스처를 유지.
+   - 선형 보간의 분산 감쇄($\\sqrt{(1-s)^2+s^2} < 1$) 문제를 $\\sqrt{1-s^2} \\cdot a + s \\cdot n$ 구면 보간으로 해결하여 모든 후보 시드가 1.0 표준편차의 고주파 텍스처를 유지.
 3. **1:1 공식 지표 일치 다목적 선별기 (CLIP MMR)**:
    - 공식 채점($T+I$)과 정확히 일치하는 $W_T=1.0, W_I=1.0$ 가중치에 중복 감점(MMR) 및 흰 배경 감점(`border_white_frac`) 가드를 결합.
 4. **Natural Reference Mode (`crop`)**:
@@ -88,10 +88,32 @@ def create_notebook():
 """)
 
     # --------------------------------------------------------------------------
-    # Cell 3: Environment Setup
+    # Cell 3: Checkpoint Architecture & Lineage
     # --------------------------------------------------------------------------
     add_md("""---
-## ⚙️ 2. 환경 설정 및 필수 패키지 설치
+## 📦 2. 체크포인트(LoRA) 아키텍처 및 전달 가이드
+
+### ❓ "Exp-11, Exp-12, Exp-13의 체크포인트는 어디에 있나요?"
+* **핵심 이해**: Exp-11, Exp-12, Exp-13은 새로운 모델 학습(Training)이 아니라 **추론단 제어 혁신(Inference-time Precision Controlled ODE + Best-of-N Candidate Ensemble)** 실험입니다.
+* 따라서 별도의 신규 가중치가 생성되는 것이 아니라, **가장 완성도가 높은 기존 LoRA 체크포인트를 공통 베이스로 로드**하여 추론을 수행합니다.
+
+| 체크포인트 폴더명 | 용량 | 학습 기법 및 특징 | 활용 실험 |
+| :--- | :---: | :--- | :--- |
+| **`checkpoints/exp05_lora_hq/`** | **~2.2GB** (10종) | • T5-XXL + Rank 64 (1,000 Steps)<br>• 피사체 고주파 텍스처 및 미세 윤곽선 복원력 최우수 | **Exp-11, Exp-12, Exp-13의 기본 베이스** |
+| **`checkpoints/exp08_dreambooth_lora/`** | **~2.2GB** (10종) | • 400 Class Priors + Dual Flow Loss ($\\lambda=0.3$)<br>• 언어 지식 망각(Language Drift) 방지 특화 | Exp-08, Exp-09 및 대체 베이스 |
+
+### 📤 팀원 전달 방법
+팀원에게 전달할 때는 위 두 폴더 중 `checkpoints/exp05_lora_hq`를 압축하여 전달하면 됩니다:
+```bash
+zip -r checkpoints.zip checkpoints/exp05_lora_hq
+```
+""")
+
+    # --------------------------------------------------------------------------
+    # Cell 4: Environment Setup
+    # --------------------------------------------------------------------------
+    add_md("""---
+## ⚙️ 3. 환경 설정 및 필수 패키지 설치
 
 Colab 상단 메뉴의 **런타임 > 런타임 유형 변경**에서 **GPU (A100, V100, L4, T4 중 하나)**가 선택되어 있는지 확인하세요.
 """)
@@ -114,10 +136,10 @@ if torch.cuda.is_available():
 """)
 
     # --------------------------------------------------------------------------
-    # Cell 4: Checkpoints & Data Directory Setup
+    # Cell 5: Checkpoints & Data Directory Setup
     # --------------------------------------------------------------------------
     add_md("""---
-## 📁 3. 디렉토리 구조 및 체크포인트 배치 가이드
+## 📁 4. 디렉토리 구조 및 체크포인트 배치
 
 전달받으신 압축 파일(`checkpoints.zip` 및 `dataset.zip`, `prompt.zip`)을 Colab 좌측 파일 탐색기에 업로드 후 아래 코드를 실행하세요.
 """)
@@ -140,10 +162,10 @@ print("✓ 디렉토리 준비 완료:")
 """)
 
     # --------------------------------------------------------------------------
-    # Cell 5: Core Controlled ODE Schedulers
+    # Cell 6: Core Controlled ODE Schedulers
     # --------------------------------------------------------------------------
     add_md("""---
-## 🧩 4. 핵심 제어 알고리즘 구현 (Controlled ODE & Inversion)
+## 🧩 5. 핵심 제어 알고리즘 구현 (Controlled ODE & Inversion)
 
 Rectified Flow 아키텍처의 시간 궤적 상에서 레퍼런스 잠재 벡터로의 방향 가이던스를 제공하는 스케줄러입니다.
 """)
@@ -213,10 +235,10 @@ print("✓ EulerControlledODE 및 Inversion 스케줄러 정의 완료!")
 """)
 
     # --------------------------------------------------------------------------
-    # Cell 6: Utilities (Spherical Blend, Crop, CLIP, White-Bg Guard)
+    # Cell 7: Utilities (Spherical Blend, Crop, CLIP, White-Bg Guard)
     # --------------------------------------------------------------------------
     add_md("""---
-## 🛠️ 5. 유틸리티 함수군 (구면 보간, Crop 정사각화, CLIP 임베딩, 흰 배경 검출)
+## 🛠️ 6. 유틸리티 함수군 (구면 보간, Crop 정사각화, CLIP 임베딩, 흰 배경 검출)
 """)
 
     add_code("""CLASS_PROMPT = {
@@ -284,10 +306,10 @@ print("✓ 핵심 유틸리티 함수 정의 완료!")
 """)
 
     # --------------------------------------------------------------------------
-    # Cell 7: Full Inference Pipeline (Exp-13 Baseline)
+    # Cell 8: Full Inference Pipeline (Exp-13 Baseline)
     # --------------------------------------------------------------------------
     add_md("""---
-## 🎯 6. 표준 추론 파이프라인 (Exp-13 Best-of-N Ensemble 실행)
+## 🎯 7. 표준 추론 파이프라인 (Exp-13 Best-of-N Ensemble 실행)
 
 아래 코드를 실행하면 10개 서브젝트에 대해 프롬프트당 4개의 후보를 생성하고, 1:1 공식 Total 최적화 선별기로 최적의 100장을 자동 선별 및 채점합니다.
 """)
@@ -326,7 +348,6 @@ print("✓ 핵심 유틸리티 함수 정의 완료!")
     cands_dir = os.path.join(output_dir, "candidates")
     os.makedirs(cands_dir, exist_ok=True)
 
-    # 서브젝트별 권장 파라미터
     CONFIGS = {
         "actionfigure_2":       {"tau": 0.62, "eta": 0.72, "fit_mode": "crop"},
         "decoritems_woodenpot": {"tau": 0.66, "eta": 0.76, "fit_mode": "crop"},
@@ -446,14 +467,14 @@ print("✓ 핵심 유틸리티 함수 정의 완료!")
 """)
 
     # --------------------------------------------------------------------------
-    # Cell 8: Additional Training / Fine-tuning Guide (DreamBooth Prior Loss)
+    # Cell 9: Additional Training / Fine-tuning Guide (DreamBooth Prior Loss)
     # --------------------------------------------------------------------------
     add_md("""---
-## 🏋️‍♂️ 7. 추가 학습 및 파인튜닝 가이드 (DreamBooth Dual Flow Loss)
+## 🏋️‍♂️ 8. 추가 학습 및 파인튜닝 가이드 (DreamBooth Dual Flow Loss)
 
 팀원들이 새로운 데이터셋이나 새로운 피사체를 추가로 학습시키고자 할 때 사용하는 파인튜닝 코드 템플릿입니다.
 
-$$\mathcal{L}_{flow} = \mathbb{E} \left[ \| v_\theta(x_t, t, c_{inst}) - (x_{inst} - \epsilon) \|^2 \right] + 0.3 \cdot \mathbb{E} \left[ \| v_\theta(x_{t, prior}, t, c_{class}) - (x_{prior} - \epsilon) \|^2 \right]$$
+$$\\mathcal{L}_{flow} = \\mathbb{E} \\left[ \\| v_\\theta(x_t, t, c_{inst}) - (x_{inst} - \\epsilon) \\|^2 \\right] + 0.3 \\cdot \\mathbb{E} \\left[ \\| v_\\theta(x_{t, prior}, t, c_{class}) - (x_{prior} - \\epsilon) \\|^2 \\right]$$
 """)
 
     add_code("""# DreamBooth LoRA 학습 스크립트 실행 템플릿 예시
@@ -478,10 +499,10 @@ print("✓ 학습 가이드 코드 템플릿 로드 완료")
 """)
 
     # --------------------------------------------------------------------------
-    # Cell 9: Official Evaluation Suite
+    # Cell 10: Official Evaluation Suite
     # --------------------------------------------------------------------------
     add_md("""---
-## 📊 8. 공식 벤치마크 정밀 채점 (evaluation.py)
+## 📊 9. 공식 벤치마크 정밀 채점 (evaluation.py)
 
 공식 채점기인 `openai/clip-vit-base-patch32`를 사용하여 100개 이미지의 CLIP-T 및 CLIP-I 점수를 산출합니다.
 """)
@@ -535,18 +556,18 @@ print("✓ 학습 가이드 코드 템플릿 로드 완료")
 """)
 
     # --------------------------------------------------------------------------
-    # Cell 10: Troubleshooting & FAQ
+    # Cell 11: Troubleshooting & FAQ
     # --------------------------------------------------------------------------
     add_md("""---
-## 💡 9. 트러블슈팅 & 실험 가이드 (실패 분석 및 노하우)
+## 💡 10. 트러블슈팅 & 실험 가이드 (실패 분석 및 노하우)
 
 ### Q1. 이미지를 생성했는데 배경이 하얗게 날아가는 경우 (Exp-11 현상)
-* **원인**: 배경 제거(`_nobg.png`) 이미지를 인버전 레퍼런스로 주면, 초기 $\tau, \eta$ 가이던스가 순백색 배경까지 모델에 강제 고정합니다.
-* **해결**: 반드시 `dataset/`의 자연 원본 이미지를 `mode="crop"`으로 참조하세요.
+* **원인**: 배경 제거(`_nobg.png`) 이미지를 인버전 레퍼런스로 주면, 초기 $\\tau, \\eta$ 가이던스가 순백색 배경까지 모델에 강제 고정합니다.
+* **해결**: 반드시 `dataset/`의 자연 원본 이미지를 `mode=\"crop\"`으로 참조하세요.
 
 ### Q2. 피사체의 얼굴/디테일이 흐려지거나 원본과 달라지는 경우
-* **원인**: Inversion 시작점 $\tau$가 너무 낮거나($<0.50$), $\eta$가 너무 약한 경우.
-* **해결**: $\tau \approx 0.65, \eta \approx 0.75$로 높이고, `spherical_blend` 강도를 $0.10 \sim 0.25$ 수준으로 조절하세요.
+* **원인**: Inversion 시작점 $\\tau$가 너무 낮거나($<0.50$), $\\eta$가 너무 약한 경우.
+* **해결**: $\\tau \\approx 0.65, \\eta \\approx 0.75$로 높이고, `spherical_blend` 강도를 $0.10 \\sim 0.25$ 수준으로 조절하세요.
 
 ### Q3. 공식 Total 점수($T+I$)를 더 끌어올리려면?
 * 후보 수($N$)를 4개에서 6~8개로 늘려 다양성 풀을 확장하고, 1:1 선별기를 통해 파레토 최상위 이미지를 채택하세요.
@@ -554,7 +575,7 @@ print("✓ 학습 가이드 코드 템플릿 로드 완료")
 
     with open("/content/project-3/baseline_pipeline_guide.ipynb", "w", encoding="utf-8") as f:
         json.dump(nb, f, indent=2, ensure_ascii=False)
-    print("✓ baseline_pipeline_guide.ipynb successfully created!")
+    print("✓ baseline_pipeline_guide.ipynb successfully updated with Checkpoint Section!")
 
 if __name__ == "__main__":
     create_notebook()
