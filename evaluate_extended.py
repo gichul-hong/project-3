@@ -22,7 +22,7 @@ import json
 import os
 import sys
 import time
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional, Any
 
 from dotenv import load_dotenv
 import numpy as np
@@ -194,16 +194,25 @@ class ExtendedEvaluator:
             print(f"⚠️ DINOv2 로드 실패 (스킵): {e}")
             self.has_dino = False
 
+    def _extract_tensor(self, x: Any) -> torch.Tensor:
+        if hasattr(x, "pooler_output") and x.pooler_output is not None:
+            return x.pooler_output
+        if hasattr(x, "image_embeds") and x.image_embeds is not None:
+            return x.image_embeds
+        if hasattr(x, "text_embeds") and x.text_embeds is not None:
+            return x.text_embeds
+        return x
+
     @torch.no_grad()
     def compute_clip_image_features(self, images: List[Image.Image]) -> torch.Tensor:
         inputs = self.clip_processor(images=images, return_tensors="pt").to(self.device)
-        feats = self.clip_model.get_image_features(**inputs)
+        feats = self._extract_tensor(self.clip_model.get_image_features(**inputs))
         return F.normalize(feats, dim=-1)
 
     @torch.no_grad()
     def compute_clip_text_features(self, texts: List[str]) -> torch.Tensor:
         inputs = self.clip_processor(text=texts, return_tensors="pt", padding=True).to(self.device)
-        feats = self.clip_model.get_text_features(**inputs)
+        feats = self._extract_tensor(self.clip_model.get_text_features(**inputs))
         return F.normalize(feats, dim=-1)
 
     @torch.no_grad()
