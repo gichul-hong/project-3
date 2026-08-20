@@ -39,6 +39,7 @@ EXP_METADATA = {
     "08_dreambooth_prior_loss": {"name": "Exp-08: True DreamBooth Prior Loss", "color": "#6366f1", "tag": "Dual Flow Loss (lambda=0.3)"},
     "09_subject_adaptive_routing": {"name": "Exp-09: Subject Dynamic Routing", "color": "#e11d48", "tag": "Adaptive Routing + Prompt Detail"},
     "11_best_of_n_ensemble": {"name": "Exp-11: Best-of-N Precision Ensemble", "color": "#8b5cf6", "tag": "4 Cands + CLIP MMR Selector"},
+    "12_balanced_ensemble": {"name": "Exp-12: Balanced SOTA Ensemble", "color": "#06b6d4", "tag": "Natural Ref + Full Scene Context"},
 }
 
 
