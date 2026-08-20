@@ -14,11 +14,11 @@
     "enable_t5": true,
     "seed": 42
   },
-  "elapsed_seconds": 143.45,
+  "elapsed_seconds": 145.25,
   "average_scores": {
-    "CLIP-T": 0.3375,
-    "CLIP-I": 0.6969,
-    "CLIP-Total": 1.0344
+    "CLIP-T": 0.3311,
+    "CLIP-I": 0.6733,
+    "CLIP-Total": 1.0044
   },
   "per_concept_scores": {
     "actionfigure_2": {
@@ -40,6 +40,10 @@
     "luggage_backpack1": {
       "t2i": 0.33,
       "i2i": 0.782
+    },
+    "person_3": {
+      "t2i": 0.2993,
+      "i2i": 0.555
     }
   }
 }
