@@ -25,8 +25,8 @@ python generate_hybrid.py \
 ```
 
 ## 3. 평가 점수 요약
-- **Text-to-Image (CLIP-T)**: **0.3396**
-- **Image-to-Image (CLIP-I)**: **0.5460**
-- **Total Combined (T+I)**: **0.8856**
+- **Text-to-Image (CLIP-T)**: **0.3523**
+- **Image-to-Image (CLIP-I)**: **0.6047**
+- **Total Combined (T+I)**: **0.9570**
 
 > 📌 상세 10개 서브젝트별 22개 점수표: [`EVALUATION_REPORT.md`](file:///content/project-3/experiments/08_dreambooth_prior_loss/EVALUATION_REPORT.md)
