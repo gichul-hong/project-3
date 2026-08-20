@@ -430,7 +430,7 @@ def main():
     parser.add_argument("--alpha", type=int, default=64)
     parser.add_argument("--lr", type=float, default=5e-5)
     parser.add_argument("--steps", type=int, default=1000)
-    parser.add_argument("--prior_weight", type=float, default=1.0)
+    parser.add_argument("--prior_weight", type=float, default=0.3)
     parser.add_argument("--enable_t5", action="store_true", default=True)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()

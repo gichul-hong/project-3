@@ -75,6 +75,21 @@ DEFAULT_NEGATIVE_PROMPTS = {
     "wearable_jacket1": "shirt, hoodie, distorted collar, missing zipper, low resolution, blurry, deformed cloth",
 }
 
+SUBJECT_ROUTING_PARAMS = {
+    # Rigid / Object / Artifact concepts: structure preservation is key
+    "furniture_sofa2": {"tau": 0.75, "eta": 0.90},
+    "decoritems_woodenpot": {"tau": 0.75, "eta": 0.90},
+    "instrument_music2": {"tau": 0.75, "eta": 0.90},
+    "transport_tank": {"tau": 0.75, "eta": 0.90},
+    "luggage_backpack1": {"tau": 0.75, "eta": 0.85},
+    "wearable_jacket1": {"tau": 0.75, "eta": 0.85},
+    # Flexible / Dynamic / Biological / Scene concepts: prompt/pose flexibility is key
+    "person_3": {"tau": 0.60, "eta": 0.70},
+    "pet_cat5": {"tau": 0.60, "eta": 0.70},
+    "actionfigure_2": {"tau": 0.65, "eta": 0.75},
+    "scene_waterfall": {"tau": 0.65, "eta": 0.75},
+}
+
 
 # ==============================================================================
 # 1. Controlled ODE Schedulers (Euler & Heun with Adaptive Eta)
@@ -444,7 +459,7 @@ def run_hybrid_for_concept(
 
     with torch.no_grad():
         inv_out = pipeline(
-            prompt=f"a photo of {token_word}",
+            prompt="",
             guidance_scale=1.0,
             num_inference_steps=num_inference_steps,
             output_type="latent",
@@ -542,6 +557,7 @@ def main():
     parser.add_argument("--enable_t5", action="store_true", default=True, help="T5-XXL 활성화")
     parser.add_argument("--no_t5", action="store_false", dest="enable_t5", help="T5-XXL 비활성화")
     parser.add_argument("--custom_neg", action="store_true", default=True, help="서브젝트별 맞춤 negative prompt 적용")
+    parser.add_argument("--subject_routing", action="store_true", help="서브젝트 특성(Rigid vs Flexible) 기반 tau/eta 동적 라우팅")
     parser.add_argument("--seed", type=int, default=42, help="시드값")
     parser.add_argument("--no_eval", action="store_true", help="자동 평가 비활성화")
 
@@ -564,6 +580,13 @@ def main():
         ckpt_dir = os.path.join(actual_checkpoints_dir, f"lora_{concept}")
         pipeline, base_config = load_hybrid_pipeline(checkpoint_dir=ckpt_dir, device_type=device, enable_t5=args.enable_t5)
 
+        cur_tau = args.tau
+        cur_eta = args.eta
+        if args.subject_routing and concept in SUBJECT_ROUTING_PARAMS:
+            cur_tau = SUBJECT_ROUTING_PARAMS[concept]["tau"]
+            cur_eta = SUBJECT_ROUTING_PARAMS[concept]["eta"]
+            print(f"  🧭 [Subject Routing] {concept}: tau={cur_tau}, eta={cur_eta} 동적 적용")
+
         run_hybrid_for_concept(
             pipeline=pipeline,
             base_scheduler_config=base_config,
@@ -576,8 +599,8 @@ def main():
             ref_mode=args.ref_mode,
             eta_schedule=args.eta_schedule,
             scheduler_type=args.scheduler,
-            tau=args.tau,
-            eta=args.eta,
+            tau=cur_tau,
+            eta=cur_eta,
             gamma=args.gamma,
             num_inference_steps=args.steps,
             guidance_scale=args.cfg,

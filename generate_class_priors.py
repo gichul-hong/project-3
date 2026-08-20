@@ -68,9 +68,11 @@ def generate_class_priors(
     print(f"  - 저장 경로: {output_dir}")
     print("=" * 70)
 
-    print("📦 SD3.5-Medium 로딩 중...")
+    print("📦 SD3.5-Medium 로딩 중 (T5 비활성화 경량 모드)...")
     pipeline = StableDiffusion3Pipeline.from_pretrained(
         model_id,
+        text_encoder_3=None,
+        tokenizer_3=None,
         torch_dtype=dtype,
         token=hf_token
     ).to(device)
