@@ -25,8 +25,8 @@ python generate_hybrid.py \
 ```
 
 ## 3. 평가 점수 요약
-- **Text-to-Image (CLIP-T)**: **0.3293**
-- **Image-to-Image (CLIP-I)**: **0.6843**
-- **Total Combined (T+I)**: **1.0136**
+- **Text-to-Image (CLIP-T)**: **0.3310**
+- **Image-to-Image (CLIP-I)**: **0.6971**
+- **Total Combined (T+I)**: **1.0281**
 
 > 📌 상세 10개 서브젝트별 22개 점수표: [`EVALUATION_REPORT.md`](file:///content/project-3/experiments/09_subject_adaptive_routing/EVALUATION_REPORT.md)
