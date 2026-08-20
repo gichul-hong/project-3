@@ -14,11 +14,11 @@
     "enable_t5": true,
     "seed": 42
   },
-  "elapsed_seconds": 148.73,
+  "elapsed_seconds": 154.98,
   "average_scores": {
-    "CLIP-T": 0.3301,
-    "CLIP-I": 0.6891,
-    "CLIP-Total": 1.0192
+    "CLIP-T": 0.3327,
+    "CLIP-I": 0.7014,
+    "CLIP-Total": 1.0341
   },
   "per_concept_scores": {
     "actionfigure_2": {
@@ -48,6 +48,10 @@
     "pet_cat5": {
       "t2i": 0.324,
       "i2i": 0.7842
+    },
+    "scene_waterfall": {
+      "t2i": 0.3509,
+      "i2i": 0.787
     }
   }
 }
