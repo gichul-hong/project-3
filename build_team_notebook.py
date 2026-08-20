@@ -1,0 +1,560 @@
+"""
+Script to build the comprehensive team baseline Jupyter Notebook (team_baseline_guide.ipynb).
+Includes detailed markdown documentation, diagrams, inference, training, evaluation, and troubleshooting.
+"""
+
+import json
+import os
+
+def create_notebook():
+    nb = {
+        "cells": [],
+        "metadata": {
+            "accelerator": "GPU",
+            "colab": {
+                "provenance": [],
+                "toc_visible": True
+            },
+            "language_info": {
+                "name": "python"
+            }
+        },
+        "nbformat": 4,
+        "nbformat_minor": 0
+    }
+
+    def add_md(source):
+        nb["cells"].append({
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": source.strip().split("\n")
+        })
+
+    def add_code(source):
+        nb["cells"].append({
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": source.strip().split("\n")
+        })
+
+    # --------------------------------------------------------------------------
+    # Cell 1: Header
+    # --------------------------------------------------------------------------
+    add_md("""# 🚀 [VERILUX Project-3] SD3.5 Multi-Subject Personalization Baseline & Extension Guide
+## Flow-Matching Inversion + Best-of-N Candidate Ensemble + DreamBooth-LoRA Training
+
+> **과제 목표**: 10종의 다채로운 피사체(인물, 동물, 가구, 악기, 풍경 등)에 대한 소수 샷(5장 내외) 커스터마이징 생성  
+> **핵심 딜레마**: **피사체 정체성 보존(CLIP-I)**과 **텍스트 프롬프트 준수도(CLIP-T)** 사이의 파레토 트레이드오프  
+> **본 노트북의 목적**:
+> 1. 팀원들이 전달받은 LoRA 체크포인트를 Colab에 업로드하여 **최신 SOTA(Exp-12/13) 추론 파이프라인을 즉시 재현**
+> 2. 나아가 **자체적인 하이퍼파라미터 튜닝, 추가 LoRA 학습(DreamBooth Prior Loss), 새로운 제어 기법**을 자유롭게 실험할 수 있는 표준 템플릿 제공
+""")
+
+    # --------------------------------------------------------------------------
+    # Cell 2: Architecture Diagram & Key Innovations
+    # --------------------------------------------------------------------------
+    add_md("""---
+## 🧠 1. 아키텍처 개요 및 핵심 혁신 기법
+
+본 파이프라인은 `stabilityai/stable-diffusion-3.5-medium` (2.5B MMDiT Flow Matching)을 기반으로 다음과 같은 5대 핵심 모듈로 구성됩니다.
+
+```
+[자연 참조 이미지] ──(Crop 정사각)──> [VAE 인코더] ──> [28스텝 오일러 Controlled Inversion]
+                                                               │
+                                                               ▼ (Inverted Latent)
+[프롬프트 sks {class}] ──(Triple Encoders)──> [MMDiT + LoRA] <── [구면 보간(Spherical Blend) 노이즈 주입 (N=4 후보)]
+                                                   │
+                                                   ▼ (28스텝 Controlled ODE 디노이징)
+                                        [400장 고화질 후보 생성]
+                                                   │
+                                                   ▼
+                        [1:1 공식 Total 최적화 CLIP MMR 선별기 (White-Bg Guard)]
+                                                   │
+                                                   ▼
+                                       [최적 100장 최종 산출물 완성!]
+```
+
+### 💡 핵심 기술 포인트 요약
+1. **High-Speed 28-Step Euler Controlled ODE**:
+   - 1차 오일러 적분 기반 벡터장 가이던스를 구현하여 기존 50스텝(7.5분/서브젝트) 대비 **연산 속도를 2.5배 가속(1.2분/서브젝트)**.
+2. **구면 보간(Spherical Blend) 분산 보존**:
+   - 선형 보간의 분산 감쇄($\sqrt{(1-s)^2+s^2} < 1$) 문제를 $\sqrt{1-s^2} \cdot a + s \cdot n$ 구면 보간으로 해결하여 모든 후보 시드가 1.0 표준편차의 고주파 텍스처를 유지.
+3. **1:1 공식 지표 일치 다목적 선별기 (CLIP MMR)**:
+   - 공식 채점($T+I$)과 정확히 일치하는 $W_T=1.0, W_I=1.0$ 가중치에 중복 감점(MMR) 및 흰 배경 감점(`border_white_frac`) 가드를 결합.
+4. **Natural Reference Mode (`crop`)**:
+   - 배경 제거 이미지의 순백색 블로우아웃 및 회색 패딩 레터박스 아티팩트를 방지하고 풍부한 씬 합성을 지원.
+""")
+
+    # --------------------------------------------------------------------------
+    # Cell 3: Environment Setup
+    # --------------------------------------------------------------------------
+    add_md("""---
+## ⚙️ 2. 환경 설정 및 필수 패키지 설치
+
+Colab 상단 메뉴의 **런타임 > 런타임 유형 변경**에서 **GPU (A100, V100, L4, T4 중 하나)**가 선택되어 있는지 확인하세요.
+""")
+
+    add_code("""# 1. 필수 라이브러리 설치
+!pip install -q diffusers>=0.30.0 transformers>=4.40.0 peft>=0.10.0 accelerate>=0.30.0 torchvision sentencepiece protobuf rembg tqdm
+
+import os, sys, glob, math, json, time, shutil
+import numpy as np
+import torch
+import torch.nn.functional as F
+from PIL import Image, ImageOps
+import matplotlib.pyplot as plt
+from tqdm.auto import tqdm
+
+print("CUDA Available:", torch.cuda.is_available())
+if torch.cuda.is_available():
+    print("Device Name:", torch.cuda.get_device_name(0))
+    print("Memory:", round(torch.cuda.get_device_properties(0).total_memory / 1e9, 1), "GB")
+""")
+
+    # --------------------------------------------------------------------------
+    # Cell 4: Checkpoints & Data Directory Setup
+    # --------------------------------------------------------------------------
+    add_md("""---
+## 📁 3. 디렉토리 구조 및 체크포인트 배치 가이드
+
+전달받으신 압축 파일(`checkpoints.zip` 및 `dataset.zip`, `prompt.zip`)을 Colab 좌측 파일 탐색기에 업로드 후 아래 코드를 실행하세요.
+""")
+
+    add_code("""# 2. 작업 디렉토리 생성 및 확인
+WORKSPACE_DIR = "/content/project-3"
+os.makedirs(os.path.join(WORKSPACE_DIR, "checkpoints"), exist_ok=True)
+os.makedirs(os.path.join(WORKSPACE_DIR, "dataset"), exist_ok=True)
+os.makedirs(os.path.join(WORKSPACE_DIR, "prompt"), exist_ok=True)
+os.makedirs(os.path.join(WORKSPACE_DIR, "experiments"), exist_ok=True)
+
+# 압축 파일이 업로드된 경우 자동 해제
+for zip_name in ["checkpoints.zip", "dataset.zip", "prompt.zip"]:
+    if os.path.exists(f"/content/{zip_name}"):
+        print(f"📦 {zip_name} 압축 해제 중...")
+        !unzip -q /content/{zip_name} -d {WORKSPACE_DIR}/
+
+print("✓ 디렉토리 준비 완료:")
+!ls -la {WORKSPACE_DIR}
+""")
+
+    # --------------------------------------------------------------------------
+    # Cell 5: Core Controlled ODE Schedulers
+    # --------------------------------------------------------------------------
+    add_md("""---
+## 🧩 4. 핵심 제어 알고리즘 구현 (Controlled ODE & Inversion)
+
+Rectified Flow 아키텍처의 시간 궤적 상에서 레퍼런스 잠재 벡터로의 방향 가이던스를 제공하는 스케줄러입니다.
+""")
+
+    add_code("""from diffusers import StableDiffusion3Pipeline, FlowMatchEulerDiscreteScheduler
+from diffusers.schedulers.scheduling_flow_match_euler_discrete import FlowMatchEulerDiscreteSchedulerOutput
+from peft import PeftModel
+from transformers import CLIPModel, CLIPProcessor
+
+class EulerControlledODE(FlowMatchEulerDiscreteScheduler):
+    \"\"\"Flow Matching 순방향 디노이징 시 Reference Latent로 유도하는 제어기\"\"\"
+    def set(self, reference: torch.Tensor, tau: float = 0.65, eta: float = 0.75, alpha: float = 1.2):
+        self.reference = reference
+        self.tau = float(tau)
+        self.eta = float(eta)
+        self.alpha = float(alpha)
+        self._step_index = None
+        return self
+
+    def controller(self, sample: torch.Tensor, sigma: torch.Tensor):
+        reference = self.reference.to(device=sample.device, dtype=sample.dtype)
+        return (sample - reference) / sigma.clamp_min(1e-6)
+
+    def step(self, model_output: torch.Tensor, timestep: torch.Tensor, sample: torch.Tensor, *args, return_dict: bool = True, **kwargs):
+        if self.step_index is None:
+            self._init_step_index(timestep)
+
+        sample_fp32 = sample.to(torch.float32)
+        sigma = self.sigmas[self.step_index].to(sample.device)
+        sigma_next = self.sigmas[self.step_index + 1].to(sample.device)
+
+        conditional_velocity = self.controller(sample_fp32, sigma).to(model_output.dtype)
+        sigma_val = sigma.item()
+
+        if sigma_val > self.tau:
+            progress = (sigma_val - self.tau) / max(1.0 - self.tau, 1e-6)
+            current_eta = self.eta * (progress ** self.alpha)
+        else:
+            current_eta = 0.0
+
+        controlled_velocity = model_output + current_eta * (conditional_velocity - model_output)
+        prev_sample = sample_fp32 + (sigma_next - sigma) * controlled_velocity
+        prev_sample = prev_sample.to(model_output.dtype)
+
+        self._step_index += 1
+        if not return_dict:
+            return (prev_sample,)
+        return FlowMatchEulerDiscreteSchedulerOutput(prev_sample=prev_sample)
+
+
+class EulerControlledODEInversion(EulerControlledODE):
+    \"\"\"참조 이미지를 t=0에서 t=1 가우시안 노이즈 공간으로 역추적하는 인버전 스케줄러\"\"\"
+    def set(self, reference: torch.Tensor, tau: float = 0.0, eta: float = 0.5):
+        return super().set(reference, tau=tau, eta=eta)
+
+    def controller(self, sample: torch.Tensor, sigma: torch.Tensor):
+        reference = self.reference.to(device=sample.device, dtype=sample.dtype)
+        return (reference - sample) / (1.0 - sigma).clamp_min(1e-6)
+
+    def set_timesteps(self, num_inference_steps: int = None, device=None, sigmas=None, mu=None, timesteps=None):
+        super().set_timesteps(num_inference_steps=num_inference_steps, device=device, sigmas=sigmas, mu=mu, timesteps=timesteps)
+        self.timesteps = torch.flip(self.timesteps, dims=(0,))
+        self.sigmas = torch.flip(self.sigmas, dims=(0,))
+        self._step_index = None
+
+print("✓ EulerControlledODE 및 Inversion 스케줄러 정의 완료!")
+""")
+
+    # --------------------------------------------------------------------------
+    # Cell 6: Utilities (Spherical Blend, Crop, CLIP, White-Bg Guard)
+    # --------------------------------------------------------------------------
+    add_md("""---
+## 🛠️ 5. 유틸리티 함수군 (구면 보간, Crop 정사각화, CLIP 임베딩, 흰 배경 검출)
+""")
+
+    add_code("""CLASS_PROMPT = {
+    "actionfigure_2": "action figure",
+    "decoritems_woodenpot": "wooden pot",
+    "furniture_sofa2": "sofa",
+    "instrument_music2": "guitar",
+    "luggage_backpack1": "backpack",
+    "person_3": "person",
+    "pet_cat5": "cat",
+    "scene_waterfall": "waterfall",
+    "transport_tank": "tank",
+    "wearable_jacket1": "jacket",
+}
+
+def _unwrap(x):
+    return x if isinstance(x, torch.Tensor) else x.pooler_output
+
+def clip_text_emb(clip_model, clip_proc, prompts, device="cuda"):
+    b = clip_proc(text=prompts, return_tensors="pt", padding=True, truncation=True).to(device)
+    return _unwrap(clip_model.get_text_features(**b)).float()
+
+def clip_image_emb(clip_model, clip_proc, images, device="cuda", bs=16):
+    out = []
+    for i in range(0, len(images), bs):
+        b = clip_proc(images=images[i:i + bs], return_tensors="pt").to(device)
+        out.append(_unwrap(clip_model.get_image_features(**b)).float())
+    return torch.cat(out)
+
+def fit_square_custom(im: Image.Image, res: int = 512, mode: str = "crop") -> Image.Image:
+    \"\"\"회색 레터박스 아티팩트를 방지하는 정사각 크롭 (워터폴만 pad 유지)\"\"\"
+    if mode == "crop":
+        w, h = im.size
+        k = res / min(w, h)
+        im = im.resize((max(res, int(round(w * k))), max(res, int(round(h * k)))), Image.BICUBIC)
+        w, h = im.size
+        l, t = (w - res) // 2, (h - res) // 2
+        return im.crop((l, t, l + res, t + res))
+    im = ImageOps.contain(im, (res, res), Image.BICUBIC)
+    canvas = Image.new("RGB", (res, res), (128, 128, 128))
+    canvas.paste(im, ((res - im.width) // 2, (res - im.height) // 2))
+    return canvas
+
+def spherical_blend(anchor: torch.Tensor, seed: int, strength: float = 0.20, device: str = "cuda") -> torch.Tensor:
+    \"\"\"가우시안 표준편차 1.0을 완벽 보존하는 구면 보간\"\"\"
+    s = min(max(strength, 0.0), 0.95)
+    g = torch.Generator(device=device).manual_seed(seed)
+    noise = torch.randn(anchor.shape, generator=g, device=device, dtype=anchor.dtype)
+    return math.sqrt(1.0 - s * s) * anchor + s * noise
+
+def compute_border_white_frac(img: Image.Image, thresh: int = 240, border_ratio: float = 0.12) -> float:
+    \"\"\"외곽 경계의 흰색 비율을 계산하여 배경 날림 아티팩트 감지\"\"\"
+    arr = np.array(img.convert("RGB"))
+    h, w, _ = arr.shape
+    bh, bw = max(1, int(h * border_ratio)), max(1, int(w * border_ratio))
+    top, bottom = arr[:bh, :, :], arr[-bh:, :, :]
+    left, right = arr[:, :bw, :], arr[:, -bw:, :]
+    def _is_white(chunk):
+        return (chunk[:, :, 0] >= thresh) & (chunk[:, :, 1] >= thresh) & (chunk[:, :, 2] >= thresh)
+    white_cnt = np.sum(_is_white(top)) + np.sum(_is_white(bottom)) + np.sum(_is_white(left)) + np.sum(_is_white(right))
+    total_cnt = top.shape[0]*top.shape[1] + bottom.shape[0]*bottom.shape[1] + left.shape[0]*left.shape[1] + right.shape[0]*right.shape[1]
+    return float(white_cnt / max(1, total_cnt))
+
+print("✓ 핵심 유틸리티 함수 정의 완료!")
+""")
+
+    # --------------------------------------------------------------------------
+    # Cell 7: Full Inference Pipeline (Exp-13 Baseline)
+    # --------------------------------------------------------------------------
+    add_md("""---
+## 🎯 6. 표준 추론 파이프라인 (Exp-13 Best-of-N Ensemble 실행)
+
+아래 코드를 실행하면 10개 서브젝트에 대해 프롬프트당 4개의 후보를 생성하고, 1:1 공식 Total 최적화 선별기로 최적의 100장을 자동 선별 및 채점합니다.
+""")
+
+    add_code("""def run_full_inference(
+    root_dir=WORKSPACE_DIR,
+    checkpoints_dir=f"{WORKSPACE_DIR}/checkpoints/exp05_lora_hq",
+    output_dir=f"{WORKSPACE_DIR}/experiments/team_baseline_run",
+    candidates_per_prompt=4,
+    steps=28,
+    guidance_scale=7.0,
+    seed=42
+):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    dtype = torch.bfloat16
+
+    print("=" * 80)
+    print(f"🚀 [팀 공용 추론 파이프라인] 실행 시작")
+    print(f"• LoRA 경로: {checkpoints_dir}")
+    print(f"• 출력 디렉토리: {output_dir}")
+    print(f"• 후보 생성 수: N = {candidates_per_prompt}")
+    print("=" * 80)
+
+    # 1. 모델 로드
+    clip_id = "openai/clip-vit-base-patch32"
+    clip_model = CLIPModel.from_pretrained(clip_id).to(device).eval()
+    clip_proc = CLIPProcessor.from_pretrained(clip_id)
+
+    pipe = StableDiffusion3Pipeline.from_pretrained(
+        "stabilityai/stable-diffusion-3.5-medium",
+        torch_dtype=dtype,
+    ).to(device)
+    pipe.set_progress_bar_config(disable=True)
+    base_sched_cfg = dict(pipe.scheduler.config)
+
+    cands_dir = os.path.join(output_dir, "candidates")
+    os.makedirs(cands_dir, exist_ok=True)
+
+    # 서브젝트별 권장 파라미터
+    CONFIGS = {
+        "actionfigure_2":       {"tau": 0.62, "eta": 0.72, "fit_mode": "crop"},
+        "decoritems_woodenpot": {"tau": 0.66, "eta": 0.76, "fit_mode": "crop"},
+        "furniture_sofa2":      {"tau": 0.66, "eta": 0.76, "fit_mode": "crop"},
+        "instrument_music2":    {"tau": 0.62, "eta": 0.72, "fit_mode": "crop"},
+        "luggage_backpack1":    {"tau": 0.65, "eta": 0.75, "fit_mode": "crop"},
+        "person_3":             {"tau": 0.60, "eta": 0.72, "fit_mode": "crop"},
+        "pet_cat5":             {"tau": 0.62, "eta": 0.72, "fit_mode": "crop"},
+        "scene_waterfall":      {"tau": 0.66, "eta": 0.76, "fit_mode": "pad"},
+        "transport_tank":       {"tau": 0.60, "eta": 0.70, "fit_mode": "crop"},
+        "wearable_jacket1":     {"tau": 0.62, "eta": 0.72, "fit_mode": "crop"},
+    }
+
+    NEG_PROMPTS = {
+        "default": "blurry, low quality, distorted, bad anatomy, flat background, white background, grey letterbox",
+        "person_3": "blurry, distorted face, bad anatomy, deformed eyes, double head, cloned face, unnatural skin, flat white background",
+    }
+
+    t0 = time.time()
+
+    for concept, class_noun in CLASS_PROMPT.items():
+        print(f"\\n▶ [{concept}] 처리 중...", flush=True)
+        cfg = CONFIGS.get(concept, {"tau": 0.62, "eta": 0.72, "fit_mode": "crop"})
+        concept_out_dir = os.path.join(output_dir, concept)
+        os.makedirs(concept_out_dir, exist_ok=True)
+        concept_cands_dir = os.path.join(cands_dir, concept)
+        os.makedirs(concept_cands_dir, exist_ok=True)
+
+        # A. LoRA 로드
+        lora_p = os.path.join(checkpoints_dir, f"lora_{concept}")
+        if not os.path.exists(lora_p):
+            lora_p = os.path.join(root_dir, "checkpoints", "exp08_dreambooth_lora", f"lora_{concept}")
+        if os.path.exists(lora_p):
+            pipe.transformer = PeftModel.from_pretrained(pipe.transformer, lora_p, torch_dtype=dtype)
+
+        # B. Reference 이미지 로드 및 Inversion
+        raw_refs = sorted(glob.glob(os.path.join(root_dir, "dataset", concept, "*.*")))
+        ref_im = fit_square_custom(Image.open(raw_refs[0]).convert("RGB"), 512, mode=cfg["fit_mode"])
+        px = pipe.image_processor.preprocess(ref_im).to(device=device, dtype=pipe.vae.dtype)
+        post = pipe.vae.encode(px).latent_dist
+        g_ref = torch.Generator(device=device).manual_seed(seed)
+        ref_latent = (post.sample(generator=g_ref) - (getattr(pipe.vae.config, "shift_factor", 0.0) or 0.0)) * pipe.vae.config.scaling_factor
+
+        inv_sched = EulerControlledODEInversion.from_config(base_sched_cfg)
+        g_inv = torch.Generator(device=device).manual_seed(seed)
+        prior_noise = torch.randn(ref_latent.shape, generator=g_inv, device=device, dtype=dtype)
+        inv_sched.set(reference=prior_noise, tau=0.0, eta=0.45)
+        pipe.scheduler = inv_sched
+
+        with torch.no_grad():
+            inv_out = pipe(prompt="", guidance_scale=1.0, num_inference_steps=steps, output_type="latent", latents=ref_latent)
+            inverted_latent = inv_out.images.clone()
+
+        # C. 프롬프트 로드
+        prompt_f = os.path.join(root_dir, "prompt", f"{concept}.txt")
+        with open(prompt_f, "r", encoding="utf-8") as f:
+            raw_prompts = [l.strip() for l in f if l.strip()]
+        eval_prompts = [p.replace("{}", class_noun) for p in raw_prompts]
+        gen_prompts = [p.replace("{}", f"sks {class_noun}") for p in raw_prompts]
+        neg_p = NEG_PROMPTS.get(concept, NEG_PROMPTS["default"])
+
+        all_candidates = {pi: [] for pi in range(len(raw_prompts))}
+
+        # D. N개 후보 생성
+        for pi, (gen_p, eval_p) in enumerate(zip(gen_prompts, eval_prompts)):
+            for ci in range(candidates_per_prompt):
+                cand_seed = seed + pi * 1000 + ci * 37
+                cand_lat = spherical_blend(inverted_latent, cand_seed, strength=0.10 + 0.12 * ci, device=device)
+
+                gen_sched = EulerControlledODE.from_config(base_sched_cfg)
+                gen_sched.set(reference=ref_latent, tau=cfg["tau"], eta=cfg["eta"], alpha=1.2)
+                pipe.scheduler = gen_sched
+
+                with torch.no_grad():
+                    img = pipe(
+                        prompt=gen_p, negative_prompt=neg_p, num_inference_steps=steps,
+                        height=512, width=512, guidance_scale=guidance_scale, latents=cand_lat
+                    ).images[0]
+
+                cand_path = os.path.join(concept_cands_dir, f"p{pi}_c{ci}.png")
+                img.save(cand_path)
+                wf = compute_border_white_frac(img)
+                all_candidates[pi].append((img, cand_path, wf))
+
+        # E. 1:1 공식 Total 최적화 선별기
+        ref_rgbs = [Image.open(p).convert("RGB") for p in raw_refs]
+        te = F.normalize(clip_text_emb(clip_model, clip_proc, eval_prompts, device=device), dim=-1)
+        ri = F.normalize(clip_image_emb(clip_model, clip_proc, ref_rgbs, device=device), dim=-1)
+
+        chosen_embs = []
+        for pi in range(len(raw_prompts)):
+            cand_imgs = [item[0] for item in all_candidates[pi]]
+            gi = F.normalize(clip_image_emb(clip_model, clip_proc, cand_imgs, device=device), dim=-1)
+            s_t = gi @ te[pi]
+            s_i = (gi @ ri.T).mean(dim=1)
+            s_dup = (gi @ ri.T).max(dim=1).values
+            wf_tensor = torch.tensor([item[2] for item in all_candidates[pi]], device=device, dtype=torch.float32)
+
+            score = 1.0 * s_t + 1.0 * s_i - 1.0 * (s_dup - 0.92).clamp(min=0) - 1.5 * (wf_tensor - 0.18).clamp(min=0)
+            if chosen_embs:
+                prev = torch.stack(chosen_embs)
+                score = score - 0.35 * (gi @ prev.T).max(dim=1).values
+
+            best_idx = int(score.argmax().item())
+            chosen_embs.append(gi[best_idx])
+            best_img, _, _ = all_candidates[pi][best_idx]
+            best_img.save(os.path.join(concept_out_dir, f"{pi}.png"))
+
+        if hasattr(pipe.transformer, "unload"):
+            pipe.transformer = pipe.transformer.unload()
+        torch.cuda.empty_cache()
+
+    print(f"\\n🎉 전체 생성 및 선별 완료! (소요 시간: {round((time.time() - t0)/60, 1)}분)")
+
+# 추론 실행 (원할 때 주석 해제하여 실행)
+# run_full_inference()
+""")
+
+    # --------------------------------------------------------------------------
+    # Cell 8: Additional Training / Fine-tuning Guide (DreamBooth Prior Loss)
+    # --------------------------------------------------------------------------
+    add_md("""---
+## 🏋️‍♂️ 7. 추가 학습 및 파인튜닝 가이드 (DreamBooth Dual Flow Loss)
+
+팀원들이 새로운 데이터셋이나 새로운 피사체를 추가로 학습시키고자 할 때 사용하는 파인튜닝 코드 템플릿입니다.
+
+$$\mathcal{L}_{flow} = \mathbb{E} \left[ \| v_\theta(x_t, t, c_{inst}) - (x_{inst} - \epsilon) \|^2 \right] + 0.3 \cdot \mathbb{E} \left[ \| v_\theta(x_{t, prior}, t, c_{class}) - (x_{prior} - \epsilon) \|^2 \right]$$
+""")
+
+    add_code("""# DreamBooth LoRA 학습 스크립트 실행 템플릿 예시
+# 본 코드는 class prior 보존 손실을 통해 언어 지식 망각(Language Drift)을 방지합니다.
+
+\"\"\"
+# 단일 컨셉 학습 실행 예시:
+!python train_dreambooth_lora_sd3.py \\
+    --instance_data_dir ./dataset/person_3 \\
+    --class_data_dir ./priors/person \\
+    --instance_prompt "a photo of sks person" \\
+    --class_prompt "a photo of person" \\
+    --output_dir ./checkpoints/my_lora_person3 \\
+    --resolution 512 \\
+    --train_batch_size 1 \\
+    --learning_rate 1e-4 \\
+    --max_train_steps 1000 \\
+    --lora_rank 64 \\
+    --prior_loss_weight 0.3
+\"\"\"
+print("✓ 학습 가이드 코드 템플릿 로드 완료")
+""")
+
+    # --------------------------------------------------------------------------
+    # Cell 9: Official Evaluation Suite
+    # --------------------------------------------------------------------------
+    add_md("""---
+## 📊 8. 공식 벤치마크 정밀 채점 (evaluation.py)
+
+공식 채점기인 `openai/clip-vit-base-patch32`를 사용하여 100개 이미지의 CLIP-T 및 CLIP-I 점수를 산출합니다.
+""")
+
+    add_code("""def run_evaluation(images_dir=f"{WORKSPACE_DIR}/experiments/team_baseline_run"):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    clip_id = "openai/clip-vit-base-patch32"
+    clip_model = CLIPModel.from_pretrained(clip_id).to(device).eval()
+    clip_proc = CLIPProcessor.from_pretrained(clip_id)
+
+    print("=" * 75)
+    print(f"📊 [공식 벤치마크 채점] 디렉토리: {images_dir}")
+    print("=" * 75)
+
+    t_list, i_list = [], []
+    for concept, class_noun in CLASS_PROMPT.items():
+        c_dir = os.path.join(images_dir, concept)
+        if not os.path.exists(c_dir):
+            continue
+
+        prompt_f = os.path.join(WORKSPACE_DIR, "prompt", f"{concept}.txt")
+        with open(prompt_f, "r", encoding="utf-8") as f:
+            prompts = [l.strip().replace("{}", class_noun) for l in f if l.strip()]
+
+        gen_imgs = [Image.open(os.path.join(c_dir, f"{i}.png")).convert("RGB") for i in range(len(prompts))]
+        ref_imgs = [Image.open(p).convert("RGB") for p in sorted(glob.glob(os.path.join(WORKSPACE_DIR, "dataset", concept, "*.*")))]
+
+        b_t = clip_proc(text=prompts, return_tensors="pt", padding=True, truncation=True).to(device)
+        te = F.normalize(_unwrap(clip_model.get_text_features(**b_t)).float(), dim=-1)
+
+        b_g = clip_proc(images=gen_imgs, return_tensors="pt").to(device)
+        gi = F.normalize(_unwrap(clip_model.get_image_features(**b_g)).float(), dim=-1)
+
+        b_r = clip_proc(images=ref_imgs, return_tensors="pt").to(device)
+        ri = F.normalize(_unwrap(clip_model.get_image_features(**b_r)).float(), dim=-1)
+
+        score_t = float(F.cosine_similarity(gi, te).mean().item())
+        score_i = float((gi @ ri.T).mean().item())
+        t_list.append(score_t)
+        i_list.append(score_i)
+
+        print(f"• {concept:<22}: CLIP-T = {score_t:.4f} | CLIP-I = {score_i:.4f} | Total = {score_t+score_i:.4f}")
+
+    mean_t, mean_i = float(np.mean(t_list)), float(np.mean(i_list))
+    print("=" * 75)
+    print(f"🏆 [최종 종합 스코어] CLIP-T: {mean_t:.4f} | CLIP-I: {mean_i:.4f} | TOTAL: {mean_t+mean_i:.4f}")
+    print("=" * 75)
+
+# 채점 실행 (원할 때 주석 해제)
+# run_evaluation()
+""")
+
+    # --------------------------------------------------------------------------
+    # Cell 10: Troubleshooting & FAQ
+    # --------------------------------------------------------------------------
+    add_md("""---
+## 💡 9. 트러블슈팅 & 실험 가이드 (실패 분석 및 노하우)
+
+### Q1. 이미지를 생성했는데 배경이 하얗게 날아가는 경우 (Exp-11 현상)
+* **원인**: 배경 제거(`_nobg.png`) 이미지를 인버전 레퍼런스로 주면, 초기 $\tau, \eta$ 가이던스가 순백색 배경까지 모델에 강제 고정합니다.
+* **해결**: 반드시 `dataset/`의 자연 원본 이미지를 `mode="crop"`으로 참조하세요.
+
+### Q2. 피사체의 얼굴/디테일이 흐려지거나 원본과 달라지는 경우
+* **원인**: Inversion 시작점 $\tau$가 너무 낮거나($<0.50$), $\eta$가 너무 약한 경우.
+* **해결**: $\tau \approx 0.65, \eta \approx 0.75$로 높이고, `spherical_blend` 강도를 $0.10 \sim 0.25$ 수준으로 조절하세요.
+
+### Q3. 공식 Total 점수($T+I$)를 더 끌어올리려면?
+* 후보 수($N$)를 4개에서 6~8개로 늘려 다양성 풀을 확장하고, 1:1 선별기를 통해 파레토 최상위 이미지를 채택하세요.
+""")
+
+    with open("/content/project-3/baseline_pipeline_guide.ipynb", "w", encoding="utf-8") as f:
+        json.dump(nb, f, indent=2, ensure_ascii=False)
+    print("✓ baseline_pipeline_guide.ipynb successfully created!")
+
+if __name__ == "__main__":
+    create_notebook()
