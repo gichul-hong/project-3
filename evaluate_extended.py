@@ -34,6 +34,19 @@ from transformers import CLIPProcessor, CLIPModel
 
 load_dotenv()
 
+CLASS_PROMPT = {
+    "actionfigure_2": "action figure",
+    "decoritems_woodenpot": "wooden pot",
+    "furniture_sofa2": "sofa",
+    "instrument_music2": "guitar",
+    "luggage_backpack1": "backpack",
+    "person_3": "person",
+    "pet_cat5": "cat",
+    "scene_waterfall": "waterfall",
+    "transport_tank": "tank",
+    "wearable_jacket1": "jacket",
+}
+
 PROMPT_TAXONOMY_TAGS = {
     "actionfigure_2": {
         0: "Baseline Instance",
@@ -241,9 +254,14 @@ class ExtendedEvaluator:
             # 2. 텍스트 프롬프트 로드
             prompts = []
             prompt_file = os.path.join(ref_dir, "prompts.json")
+            txt_file = os.path.join("prompt", f"{concept}.txt")
             if os.path.exists(prompt_file):
                 with open(prompt_file) as f:
                     prompts = json.load(f)
+            elif os.path.exists(txt_file):
+                with open(txt_file, "r", encoding="utf-8") as tf:
+                    class_w = CLASS_PROMPT.get(concept, concept)
+                    prompts = [l.strip().replace("{}", class_w) for l in tf if l.strip()]
             else:
                 prompts = [f"a photo of {concept}"] * len(gen_images)
 
