@@ -270,12 +270,13 @@ def main():
                 "--eta_schedule", "adaptive",
                 "--scheduler", "heun",
                 "--subject_routing",
+                "--enhance_prompts",
                 "--steps", str(args.steps_gen),
                 "--enable_t5",
                 "--custom_neg",
                 "--seed", "42",
             ],
-            f"Phase 3-B: Exp-09 Subject-Aware Dynamic Routing Heun 50-Step 추론 [{c}]",
+            f"Phase 3-B: Exp-09 Subject Routing + Prompt Detail Enhanced Heun 50-Step 추론 [{c}]",
         )
 
         sync_to_drive(os.path.join(exp09_out_dir, c), f"experiments/09_subject_adaptive_routing/{c}")
