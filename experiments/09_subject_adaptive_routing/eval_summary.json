@@ -14,11 +14,11 @@
     "enable_t5": true,
     "seed": 42
   },
-  "elapsed_seconds": 154.82,
+  "elapsed_seconds": 140.48,
   "average_scores": {
-    "CLIP-T": 0.331,
-    "CLIP-I": 0.6971,
-    "CLIP-Total": 1.0281
+    "CLIP-T": 0.3274,
+    "CLIP-I": 0.6838,
+    "CLIP-Total": 1.0112
   },
   "per_concept_scores": {
     "actionfigure_2": {
@@ -52,6 +52,10 @@
     "scene_waterfall": {
       "t2i": 0.343,
       "i2i": 0.7869
+    },
+    "transport_tank": {
+      "t2i": 0.2979,
+      "i2i": 0.5774
     }
   }
 }
