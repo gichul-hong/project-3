@@ -22,9 +22,9 @@
 | **Exp-08** | True DreamBooth Prior Loss | Class Prior (400장) + $\mathcal{L}_{prior} (\lambda=0.3)$ | 0.3273 | 0.6948 | 1.0221 | Language Drift 원천 방지 |
 | **Exp-09** | Subject Adaptive Routing | 피사체별 동적 라우팅 ($\tau, \eta$) + 프롬프트 디테일 | 0.3268 | 0.6908 | 1.0176 | 클래스별 파라미터 분기 |
 | **Exp-11** | Best-of-N Precision Ensemble | 4 Cands + Spherical Blend + MMR Selector | 0.3041 | **0.7561** | 1.0602 | 정체성(Identity) 특화 |
-| **Exp-12** | Balanced SOTA Ensemble | 28-Step Euler (2.5배 가속) + 1:1 Metric Alignment | **0.3250** | 0.7370 | 1.0620 | 배경 변환과 정체성의 균형 |
-| **Exp-13** | **Ultimate SOTA Ensemble** | **Crop-Fit Ref + 1:1 Total Metric + White Guard** | **0.3249** | **0.7396** | **1.0645 🏆** | **역대 최고 Total SOTA & 백색날림 0건** |
-| **Exp-14** | **Extreme Prompt Alignment** | **CFG 7.5 + Soft ODE + Pure CLIP-T Maximizer** | **0.345+** | 0.620+ | - | **프롬프트 텍스트 충실도 극대화** |
+| **Exp-12** | Balanced SOTA Ensemble | 28-Step Euler (2.5배 가속) + 1:1 Metric Alignment | 0.3250 | 0.7370 | 1.0620 | 배경 변환과 정체성의 균형 |
+| **Exp-13** | **Ultimate SOTA Ensemble** | **Crop-Fit Ref + 1:1 Total Metric + White Guard** | 0.3249 | **0.7396** | **1.0645 🏆** | **역대 최고 Total SOTA & 백색날림 0건** |
+| **Exp-14** | **Extreme Prompt Alignment** | **CFG 7.5 + Soft ODE + Pure CLIP-T Maximizer** | **0.3402 🥇** | 0.7162 | 1.0565 | **역대 최고 프롬프트 충실도(CLIP-T)** |
 
 ---
 
@@ -73,8 +73,8 @@ graph TD
 │   ├── 📁 05_lora_hq/
 │   ├── 📁 11_best_of_n_ensemble/      ← [Exp-11] Identity 특화 (Total 1.0602)
 │   ├── 📁 12_balanced_ensemble/       ← [Exp-12] 2.5배 고속 균형 (Total 1.0620)
-│   ├── 📁 13_sota_ensemble/           ← [Exp-13] 🏆 역대 최고 SOTA 챔피언 (Total 1.0645)
-│   └── 📁 14_extreme_prompt_align/    ← [Exp-14] 극한의 프롬프트 정렬 (CFG 7.5)
+│   ├── 📁 13_sota_ensemble/           ← [Exp-13] 🏆 역대 최고 Total SOTA 챔피언 (Total 1.0645)
+│   └── 📁 14_extreme_prompt_align/    ← [Exp-14] 🥇 역대 최고 CLIP-T 극대화 (CLIP-T 0.3402)
 ├── 📁 docs/
 │   ├── 📄 ppt-outline.md              ← 10-Slide PPT 발표 스토리라인 및 Q&A
 │   └── 📄 EXPERIMENT_HISTORY.md       ← 14단 전체 정량 지표 분석서

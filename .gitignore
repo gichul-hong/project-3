@@ -57,3 +57,7 @@ desktop.ini
 # IDE
 .idea/
 .vscode/
+
+# Experiment Candidates
+experiments/*/candidates/
+

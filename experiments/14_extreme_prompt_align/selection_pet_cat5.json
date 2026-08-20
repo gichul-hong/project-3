@@ -1,0 +1,402 @@
+{
+  "p0": {
+    "picked_candidate": 1,
+    "clip_t": 0.3028155267238617,
+    "clip_i": 0.8197709918022156,
+    "obj_score": 0.687608152627945,
+    "all_candidates": [
+      {
+        "cand_idx": 1,
+        "clip_t": 0.3028155267238617,
+        "clip_i": 0.8197709918022156,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.687608152627945
+      },
+      {
+        "cand_idx": 3,
+        "clip_t": 0.29733073711395264,
+        "clip_i": 0.8108713030815125,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.6757486045360566
+      },
+      {
+        "cand_idx": 0,
+        "clip_t": 0.292941153049469,
+        "clip_i": 0.8674416542053223,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.6726264715194702
+      },
+      {
+        "cand_idx": 2,
+        "clip_t": 0.2945616841316223,
+        "clip_i": 0.8288223743438721,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.6720056056976318
+      }
+    ]
+  },
+  "p1": {
+    "picked_candidate": 2,
+    "clip_t": 0.3474210500717163,
+    "clip_i": 0.7612072229385376,
+    "obj_score": 0.7709628224372864,
+    "all_candidates": [
+      {
+        "cand_idx": 2,
+        "clip_t": 0.3474210500717163,
+        "clip_i": 0.7612072229385376,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7709628224372864
+      },
+      {
+        "cand_idx": 3,
+        "clip_t": 0.3443777859210968,
+        "clip_i": 0.7743480205535889,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7661903738975525
+      },
+      {
+        "cand_idx": 1,
+        "clip_t": 0.343453586101532,
+        "clip_i": 0.7815605998039246,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7650632321834564
+      },
+      {
+        "cand_idx": 0,
+        "clip_t": 0.34216251969337463,
+        "clip_i": 0.7743030786514282,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7617553472518921
+      }
+    ]
+  },
+  "p2": {
+    "picked_candidate": 3,
+    "clip_t": 0.3589383363723755,
+    "clip_i": 0.784696102142334,
+    "obj_score": 0.7963462829589844,
+    "all_candidates": [
+      {
+        "cand_idx": 3,
+        "clip_t": 0.3589383363723755,
+        "clip_i": 0.784696102142334,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7963462829589844
+      },
+      {
+        "cand_idx": 1,
+        "clip_t": 0.3559063971042633,
+        "clip_i": 0.8034133911132812,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7921541333198547
+      },
+      {
+        "cand_idx": 0,
+        "clip_t": 0.34904515743255615,
+        "clip_i": 0.7726180553436279,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7753521203994751
+      },
+      {
+        "cand_idx": 2,
+        "clip_t": 0.34773027896881104,
+        "clip_i": 0.760560154914856,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7715165734291076
+      }
+    ]
+  },
+  "p3": {
+    "picked_candidate": 2,
+    "clip_t": 0.33239710330963135,
+    "clip_i": 0.8374751210212708,
+    "obj_score": 0.7485417187213897,
+    "all_candidates": [
+      {
+        "cand_idx": 2,
+        "clip_t": 0.33239710330963135,
+        "clip_i": 0.8374751210212708,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7485417187213897
+      },
+      {
+        "cand_idx": 0,
+        "clip_t": 0.32279568910598755,
+        "clip_i": 0.7966274619102478,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7252541244029999
+      },
+      {
+        "cand_idx": 1,
+        "clip_t": 0.3187294006347656,
+        "clip_i": 0.8467597365379333,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7221347749233246
+      },
+      {
+        "cand_idx": 3,
+        "clip_t": 0.3125641942024231,
+        "clip_i": 0.8157840371131897,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7067067921161652
+      }
+    ]
+  },
+  "p4": {
+    "picked_candidate": 2,
+    "clip_t": 0.3193589448928833,
+    "clip_i": 0.8496478199958801,
+    "obj_score": 0.7236826717853546,
+    "all_candidates": [
+      {
+        "cand_idx": 2,
+        "clip_t": 0.3193589448928833,
+        "clip_i": 0.8496478199958801,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7236826717853546
+      },
+      {
+        "cand_idx": 1,
+        "clip_t": 0.30563828349113464,
+        "clip_i": 0.8538270592689514,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.6966592729091644
+      },
+      {
+        "cand_idx": 0,
+        "clip_t": 0.2966192364692688,
+        "clip_i": 0.8221122026443481,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.6754496932029724
+      },
+      {
+        "cand_idx": 3,
+        "clip_t": 0.28993237018585205,
+        "clip_i": 0.8653600215911865,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.6664007425308227
+      }
+    ]
+  },
+  "p5": {
+    "picked_candidate": 2,
+    "clip_t": 0.33920055627822876,
+    "clip_i": 0.7544583678245544,
+    "obj_score": 0.7538469493389129,
+    "all_candidates": [
+      {
+        "cand_idx": 2,
+        "clip_t": 0.33920055627822876,
+        "clip_i": 0.7544583678245544,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7538469493389129
+      },
+      {
+        "cand_idx": 1,
+        "clip_t": 0.3336285352706909,
+        "clip_i": 0.7462613582611084,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7418832063674927
+      },
+      {
+        "cand_idx": 3,
+        "clip_t": 0.33116084337234497,
+        "clip_i": 0.7846150398254395,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7407831907272339
+      },
+      {
+        "cand_idx": 0,
+        "clip_t": 0.3280128836631775,
+        "clip_i": 0.7595393061637878,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7319796979427338
+      }
+    ]
+  },
+  "p6": {
+    "picked_candidate": 1,
+    "clip_t": 0.38198322057724,
+    "clip_i": 0.7504438161849976,
+    "obj_score": 0.8390108227729798,
+    "all_candidates": [
+      {
+        "cand_idx": 1,
+        "clip_t": 0.38198322057724,
+        "clip_i": 0.7504438161849976,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.8390108227729798
+      },
+      {
+        "cand_idx": 3,
+        "clip_t": 0.3754095733165741,
+        "clip_i": 0.7520964741706848,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.8260287940502167
+      },
+      {
+        "cand_idx": 0,
+        "clip_t": 0.36278218030929565,
+        "clip_i": 0.7470264434814453,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.8002670049667359
+      },
+      {
+        "cand_idx": 2,
+        "clip_t": 0.3591538965702057,
+        "clip_i": 0.7464156746864319,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7929493606090545
+      }
+    ]
+  },
+  "p7": {
+    "picked_candidate": 0,
+    "clip_t": 0.3454486131668091,
+    "clip_i": 0.8038901090621948,
+    "obj_score": 0.7712862372398377,
+    "all_candidates": [
+      {
+        "cand_idx": 0,
+        "clip_t": 0.3454486131668091,
+        "clip_i": 0.8038901090621948,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7712862372398377
+      },
+      {
+        "cand_idx": 1,
+        "clip_t": 0.3397253453731537,
+        "clip_i": 0.8186487555503845,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7613155663013458
+      },
+      {
+        "cand_idx": 3,
+        "clip_t": 0.32322460412979126,
+        "clip_i": 0.7916442155838013,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7256136298179626
+      },
+      {
+        "cand_idx": 2,
+        "clip_t": 0.3178004026412964,
+        "clip_i": 0.8158652782440186,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7171873331069947
+      }
+    ]
+  },
+  "p8": {
+    "picked_candidate": 1,
+    "clip_t": 0.34337592124938965,
+    "clip_i": 0.7510278820991516,
+    "obj_score": 0.7618546307086944,
+    "all_candidates": [
+      {
+        "cand_idx": 1,
+        "clip_t": 0.34337592124938965,
+        "clip_i": 0.7510278820991516,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7618546307086944
+      },
+      {
+        "cand_idx": 3,
+        "clip_t": 0.3398057222366333,
+        "clip_i": 0.7490187287330627,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7545133173465729
+      },
+      {
+        "cand_idx": 2,
+        "clip_t": 0.3379533588886261,
+        "clip_i": 0.7631677985191345,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7522234976291656
+      },
+      {
+        "cand_idx": 0,
+        "clip_t": 0.3360264301300049,
+        "clip_i": 0.7380521297454834,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7458580732345581
+      }
+    ]
+  },
+  "p9": {
+    "picked_candidate": 1,
+    "clip_t": 0.31816184520721436,
+    "clip_i": 0.7075304388999939,
+    "obj_score": 0.7070767343044281,
+    "all_candidates": [
+      {
+        "cand_idx": 1,
+        "clip_t": 0.31816184520721436,
+        "clip_i": 0.7075304388999939,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.7070767343044281
+      },
+      {
+        "cand_idx": 3,
+        "clip_t": 0.313836932182312,
+        "clip_i": 0.6971548795700073,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.6973893523216248
+      },
+      {
+        "cand_idx": 2,
+        "clip_t": 0.3119003176689148,
+        "clip_i": 0.7200629115104675,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.6958069264888763
+      },
+      {
+        "cand_idx": 0,
+        "clip_t": 0.31020933389663696,
+        "clip_i": 0.7373427748680115,
+        "white_frac": 0.0,
+        "white_pen": 0.0,
+        "obj_score": 0.6941529452800751
+      }
+    ]
+  }
+}
