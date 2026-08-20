@@ -1,0 +1,49 @@
+{
+  "average_scores": {
+    "t2i": 0.3041,
+    "i2i": 0.7561,
+    "total": 1.0602
+  },
+  "per_concept_scores": {
+    "actionfigure_2": {
+      "t2i": 0.3002,
+      "i2i": 0.7069
+    },
+    "decoritems_woodenpot": {
+      "t2i": 0.3353,
+      "i2i": 0.753
+    },
+    "furniture_sofa2": {
+      "t2i": 0.2762,
+      "i2i": 0.8505
+    },
+    "instrument_music2": {
+      "t2i": 0.2911,
+      "i2i": 0.7917
+    },
+    "luggage_backpack1": {
+      "t2i": 0.3097,
+      "i2i": 0.8372
+    },
+    "person_3": {
+      "t2i": 0.3052,
+      "i2i": 0.6048
+    },
+    "pet_cat5": {
+      "t2i": 0.3202,
+      "i2i": 0.7771
+    },
+    "scene_waterfall": {
+      "t2i": 0.3348,
+      "i2i": 0.7759
+    },
+    "transport_tank": {
+      "t2i": 0.2713,
+      "i2i": 0.6824
+    },
+    "wearable_jacket1": {
+      "t2i": 0.2965,
+      "i2i": 0.782
+    }
+  }
+}

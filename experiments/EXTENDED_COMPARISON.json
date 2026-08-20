@@ -1,905 +1,114 @@
 {
-  "01_rf_inversion_baseline": {
-    "experiment": "01_rf_inversion_baseline",
+  "11_best_of_n_ensemble": {
+    "experiment": "11_best_of_n_ensemble",
     "summary": {
       "clip_t": 0.2536,
-      "clip_i": 0.7438,
-      "dino_i": 0.5997,
-      "total_clip": 0.9974
+      "clip_i": 0.7261,
+      "dino_i": 0.534,
+      "total_clip": 0.9797
     },
     "taxonomy_breakdown": {
       "Baseline Instance": {
         "count": 10,
-        "clip_t": 0.2351,
-        "clip_i": 0.7957,
-        "dino_i": 0.6863
+        "clip_t": 0.2194,
+        "clip_i": 0.7966,
+        "dino_i": 0.6613
       },
       "Scene Composition": {
         "count": 44,
-        "clip_t": 0.2555,
-        "clip_i": 0.7397,
-        "dino_i": 0.5914
+        "clip_t": 0.2521,
+        "clip_i": 0.7247,
+        "dino_i": 0.539
       },
       "Attribute Binding": {
         "count": 33,
-        "clip_t": 0.2613,
-        "clip_i": 0.7183,
-        "dino_i": 0.5646
-      },
-      "Style Transfer": {
-        "count": 11,
-        "clip_t": 0.2402,
-        "clip_i": 0.8124,
-        "dino_i": 0.6787
-      },
-      "Action Dynamics": {
-        "count": 2,
-        "clip_t": 0.2508,
-        "clip_i": 0.6146,
-        "dino_i": 0.4933
-      }
-    },
-    "per_concept": {
-      "actionfigure_2": {
-        "clip_t": 0.2293,
-        "clip_i": 0.6245,
-        "dino_i": 0.5806,
-        "diversity": 0.7645,
-        "total": 0.8539
-      },
-      "decoritems_woodenpot": {
-        "clip_t": 0.2655,
-        "clip_i": 0.673,
-        "dino_i": 0.5405,
-        "diversity": 0.6582,
-        "total": 0.9384
-      },
-      "furniture_sofa2": {
-        "clip_t": 0.2236,
-        "clip_i": 0.8072,
-        "dino_i": 0.8326,
-        "diversity": 0.4176,
-        "total": 1.0308
-      },
-      "instrument_music2": {
-        "clip_t": 0.2739,
-        "clip_i": 0.7529,
-        "dino_i": 0.7567,
-        "diversity": 0.6248,
-        "total": 1.0268
-      },
-      "luggage_backpack1": {
-        "clip_t": 0.2584,
-        "clip_i": 0.8577,
-        "dino_i": 0.599,
-        "diversity": 0.5339,
-        "total": 1.1161
-      },
-      "person_3": {
-        "clip_t": 0.2258,
-        "clip_i": 0.6961,
-        "dino_i": 0.4218,
-        "diversity": 0.8802,
-        "total": 0.9219
-      },
-      "pet_cat5": {
-        "clip_t": 0.2498,
-        "clip_i": 0.8863,
-        "dino_i": 0.6888,
-        "diversity": 0.4919,
-        "total": 1.1361
-      },
-      "scene_waterfall": {
-        "clip_t": 0.265,
-        "clip_i": 0.7755,
-        "dino_i": 0.7221,
-        "diversity": 0.6764,
-        "total": 1.0404
-      },
-      "transport_tank": {
-        "clip_t": 0.278,
-        "clip_i": 0.5845,
-        "dino_i": 0.2937,
-        "diversity": 0.8046,
-        "total": 0.8625
-      },
-      "wearable_jacket1": {
-        "clip_t": 0.2667,
-        "clip_i": 0.78,
-        "dino_i": 0.5611,
-        "diversity": 0.6851,
-        "total": 1.0467
-      }
-    }
-  },
-  "03_lora_augmented": {
-    "experiment": "03_lora_augmented",
-    "summary": {
-      "clip_t": 0.2845,
-      "clip_i": 0.6646,
-      "dino_i": 0.3936,
-      "total_clip": 0.9492
-    },
-    "taxonomy_breakdown": {
-      "Baseline Instance": {
-        "count": 10,
-        "clip_t": 0.2336,
-        "clip_i": 0.7121,
-        "dino_i": 0.5518
-      },
-      "Scene Composition": {
-        "count": 44,
-        "clip_t": 0.2891,
-        "clip_i": 0.6542,
-        "dino_i": 0.3652
-      },
-      "Attribute Binding": {
-        "count": 33,
-        "clip_t": 0.2933,
-        "clip_i": 0.6483,
-        "dino_i": 0.3414
-      },
-      "Style Transfer": {
-        "count": 11,
-        "clip_t": 0.2816,
-        "clip_i": 0.737,
-        "dino_i": 0.5478
-      },
-      "Action Dynamics": {
-        "count": 2,
-        "clip_t": 0.3128,
-        "clip_i": 0.5282,
-        "dino_i": 0.2392
-      }
-    },
-    "per_concept": {
-      "actionfigure_2": {
-        "clip_t": 0.2749,
-        "clip_i": 0.5008,
-        "dino_i": 0.2446,
-        "diversity": 0.882,
-        "total": 0.7757
-      },
-      "decoritems_woodenpot": {
-        "clip_t": 0.3183,
-        "clip_i": 0.6045,
-        "dino_i": 0.2773,
-        "diversity": 0.8559,
-        "total": 0.9228
-      },
-      "furniture_sofa2": {
-        "clip_t": 0.2648,
-        "clip_i": 0.6843,
-        "dino_i": 0.5033,
-        "diversity": 0.7222,
-        "total": 0.949
-      },
-      "instrument_music2": {
-        "clip_t": 0.2943,
-        "clip_i": 0.6883,
-        "dino_i": 0.5745,
-        "diversity": 0.8182,
-        "total": 0.9826
-      },
-      "luggage_backpack1": {
-        "clip_t": 0.2898,
-        "clip_i": 0.756,
-        "dino_i": 0.3735,
-        "diversity": 0.741,
-        "total": 1.0458
-      },
-      "person_3": {
-        "clip_t": 0.2564,
-        "clip_i": 0.598,
-        "dino_i": 0.1267,
-        "diversity": 0.9293,
-        "total": 0.8544
-      },
-      "pet_cat5": {
-        "clip_t": 0.2876,
-        "clip_i": 0.8134,
-        "dino_i": 0.6853,
-        "diversity": 0.7336,
-        "total": 1.101
-      },
-      "scene_waterfall": {
-        "clip_t": 0.2979,
-        "clip_i": 0.754,
-        "dino_i": 0.5874,
-        "diversity": 0.7599,
-        "total": 1.0519
-      },
-      "transport_tank": {
-        "clip_t": 0.2974,
-        "clip_i": 0.5588,
-        "dino_i": 0.1634,
-        "diversity": 0.7173,
-        "total": 0.8562
-      },
-      "wearable_jacket1": {
-        "clip_t": 0.264,
-        "clip_i": 0.6881,
-        "dino_i": 0.3995,
-        "diversity": 0.8283,
-        "total": 0.9521
-      }
-    }
-  },
-  "04_lora_rf_hybrid": {
-    "experiment": "04_lora_rf_hybrid",
-    "summary": {
-      "clip_t": 0.2614,
-      "clip_i": 0.7396,
-      "dino_i": 0.5886,
-      "total_clip": 1.001
-    },
-    "taxonomy_breakdown": {
-      "Baseline Instance": {
-        "count": 10,
-        "clip_t": 0.2375,
-        "clip_i": 0.7999,
-        "dino_i": 0.7026
-      },
-      "Scene Composition": {
-        "count": 44,
-        "clip_t": 0.2557,
-        "clip_i": 0.7376,
-        "dino_i": 0.5872
-      },
-      "Attribute Binding": {
-        "count": 33,
-        "clip_t": 0.274,
-        "clip_i": 0.7157,
-        "dino_i": 0.5249
-      },
-      "Style Transfer": {
-        "count": 11,
-        "clip_t": 0.2658,
-        "clip_i": 0.7981,
-        "dino_i": 0.6874
-      },
-      "Action Dynamics": {
-        "count": 2,
-        "clip_t": 0.2759,
-        "clip_i": 0.5534,
-        "dino_i": 0.5555
-      }
-    },
-    "per_concept": {
-      "actionfigure_2": {
-        "clip_t": 0.239,
-        "clip_i": 0.5749,
-        "dino_i": 0.6053,
-        "diversity": 0.7994,
-        "total": 0.814
-      },
-      "decoritems_woodenpot": {
-        "clip_t": 0.2761,
-        "clip_i": 0.7357,
-        "dino_i": 0.6185,
-        "diversity": 0.7009,
-        "total": 1.0118
-      },
-      "furniture_sofa2": {
-        "clip_t": 0.2317,
-        "clip_i": 0.7912,
-        "dino_i": 0.8414,
-        "diversity": 0.5192,
-        "total": 1.0229
-      },
-      "instrument_music2": {
-        "clip_t": 0.2858,
-        "clip_i": 0.7691,
-        "dino_i": 0.7452,
-        "diversity": 0.6824,
-        "total": 1.0549
-      },
-      "luggage_backpack1": {
-        "clip_t": 0.2536,
-        "clip_i": 0.865,
-        "dino_i": 0.6598,
-        "diversity": 0.5593,
-        "total": 1.1185
-      },
-      "person_3": {
-        "clip_t": 0.251,
-        "clip_i": 0.6198,
-        "dino_i": 0.1685,
-        "diversity": 0.9818,
-        "total": 0.8709
-      },
-      "pet_cat5": {
-        "clip_t": 0.2596,
-        "clip_i": 0.8575,
-        "dino_i": 0.7114,
-        "diversity": 0.639,
-        "total": 1.1171
-      },
-      "scene_waterfall": {
-        "clip_t": 0.2876,
-        "clip_i": 0.7675,
-        "dino_i": 0.6397,
-        "diversity": 0.7199,
-        "total": 1.0551
-      },
-      "transport_tank": {
-        "clip_t": 0.2695,
-        "clip_i": 0.5988,
-        "dino_i": 0.2871,
-        "diversity": 0.7623,
-        "total": 0.8683
-      },
-      "wearable_jacket1": {
-        "clip_t": 0.2602,
-        "clip_i": 0.816,
-        "dino_i": 0.6088,
-        "diversity": 0.6575,
-        "total": 1.0762
-      }
-    }
-  },
-  "05_lora_hq": {
-    "experiment": "05_lora_hq",
-    "summary": {
-      "clip_t": 0.277,
-      "clip_i": 0.6773,
-      "dino_i": 0.3841,
-      "total_clip": 0.9543
-    },
-    "taxonomy_breakdown": {
-      "Baseline Instance": {
-        "count": 10,
-        "clip_t": 0.224,
-        "clip_i": 0.7053,
-        "dino_i": 0.5208
-      },
-      "Scene Composition": {
-        "count": 44,
-        "clip_t": 0.2845,
-        "clip_i": 0.6719,
-        "dino_i": 0.3854
-      },
-      "Attribute Binding": {
-        "count": 33,
-        "clip_t": 0.2829,
-        "clip_i": 0.6667,
-        "dino_i": 0.2942
-      },
-      "Style Transfer": {
-        "count": 11,
-        "clip_t": 0.2771,
-        "clip_i": 0.7232,
-        "dino_i": 0.5295
-      },
-      "Action Dynamics": {
-        "count": 2,
-        "clip_t": 0.2775,
-        "clip_i": 0.5818,
-        "dino_i": 0.353
-      }
-    },
-    "per_concept": {
-      "actionfigure_2": {
-        "clip_t": 0.27,
-        "clip_i": 0.5565,
-        "dino_i": 0.3204,
-        "diversity": 0.8996,
-        "total": 0.8264
-      },
-      "decoritems_woodenpot": {
-        "clip_t": 0.3136,
-        "clip_i": 0.6512,
-        "dino_i": 0.3421,
-        "diversity": 0.8223,
-        "total": 0.9648
-      },
-      "furniture_sofa2": {
-        "clip_t": 0.2603,
-        "clip_i": 0.7114,
-        "dino_i": 0.5359,
-        "diversity": 0.6096,
-        "total": 0.9717
-      },
-      "instrument_music2": {
-        "clip_t": 0.3032,
-        "clip_i": 0.6885,
-        "dino_i": 0.5465,
-        "diversity": 0.7727,
-        "total": 0.9917
-      },
-      "luggage_backpack1": {
-        "clip_t": 0.2828,
-        "clip_i": 0.7366,
-        "dino_i": 0.3559,
-        "diversity": 0.8149,
-        "total": 1.0194
-      },
-      "person_3": {
-        "clip_t": 0.2366,
-        "clip_i": 0.6111,
-        "dino_i": 0.0979,
-        "diversity": 0.9898,
-        "total": 0.8477
-      },
-      "pet_cat5": {
-        "clip_t": 0.2747,
-        "clip_i": 0.7879,
-        "dino_i": 0.5563,
-        "diversity": 0.753,
-        "total": 1.0625
-      },
-      "scene_waterfall": {
-        "clip_t": 0.2801,
-        "clip_i": 0.7522,
-        "dino_i": 0.4988,
-        "diversity": 0.7762,
-        "total": 1.0323
-      },
-      "transport_tank": {
-        "clip_t": 0.272,
-        "clip_i": 0.5604,
-        "dino_i": 0.1698,
-        "diversity": 0.9251,
-        "total": 0.8323
-      },
-      "wearable_jacket1": {
-        "clip_t": 0.2766,
-        "clip_i": 0.7179,
-        "dino_i": 0.417,
-        "diversity": 0.7896,
-        "total": 0.9944
-      }
-    }
-  },
-  "06_hybrid_adaptive": {
-    "experiment": "06_hybrid_adaptive",
-    "summary": {
-      "clip_t": 0.2776,
-      "clip_i": 0.7138,
-      "dino_i": 0.4862,
-      "total_clip": 0.9914
-    },
-    "taxonomy_breakdown": {
-      "Baseline Instance": {
-        "count": 10,
-        "clip_t": 0.2311,
-        "clip_i": 0.7706,
-        "dino_i": 0.6572
-      },
-      "Scene Composition": {
-        "count": 44,
-        "clip_t": 0.2775,
-        "clip_i": 0.7054,
-        "dino_i": 0.4699
-      },
-      "Attribute Binding": {
-        "count": 33,
-        "clip_t": 0.2945,
-        "clip_i": 0.7029,
-        "dino_i": 0.4186
-      },
-      "Style Transfer": {
-        "count": 11,
-        "clip_t": 0.2667,
-        "clip_i": 0.7531,
-        "dino_i": 0.6253
-      },
-      "Action Dynamics": {
-        "count": 2,
-        "clip_t": 0.2936,
-        "clip_i": 0.5804,
-        "dino_i": 0.3378
-      }
-    },
-    "per_concept": {
-      "actionfigure_2": {
-        "clip_t": 0.2672,
-        "clip_i": 0.6263,
-        "dino_i": 0.4655,
-        "diversity": 0.8705,
-        "total": 0.8935
-      },
-      "decoritems_woodenpot": {
-        "clip_t": 0.3119,
-        "clip_i": 0.7039,
-        "dino_i": 0.4615,
-        "diversity": 0.7838,
-        "total": 1.0158
-      },
-      "furniture_sofa2": {
-        "clip_t": 0.2687,
-        "clip_i": 0.7135,
-        "dino_i": 0.5886,
-        "diversity": 0.6474,
-        "total": 0.9822
-      },
-      "instrument_music2": {
-        "clip_t": 0.3071,
-        "clip_i": 0.684,
-        "dino_i": 0.5847,
-        "diversity": 0.8189,
-        "total": 0.9912
-      },
-      "luggage_backpack1": {
-        "clip_t": 0.2747,
-        "clip_i": 0.787,
-        "dino_i": 0.4243,
-        "diversity": 0.7454,
-        "total": 1.0617
-      },
-      "person_3": {
-        "clip_t": 0.2458,
-        "clip_i": 0.6392,
-        "dino_i": 0.1304,
-        "diversity": 0.9691,
-        "total": 0.8849
-      },
-      "pet_cat5": {
-        "clip_t": 0.2762,
-        "clip_i": 0.8123,
-        "dino_i": 0.6472,
-        "diversity": 0.7299,
-        "total": 1.0885
-      },
-      "scene_waterfall": {
-        "clip_t": 0.2781,
-        "clip_i": 0.7561,
-        "dino_i": 0.628,
-        "diversity": 0.8199,
-        "total": 1.0342
-      },
-      "transport_tank": {
-        "clip_t": 0.2775,
-        "clip_i": 0.6262,
-        "dino_i": 0.2977,
-        "diversity": 0.8689,
-        "total": 0.9037
-      },
-      "wearable_jacket1": {
-        "clip_t": 0.2687,
-        "clip_i": 0.7897,
-        "dino_i": 0.6337,
-        "diversity": 0.6814,
-        "total": 1.0584
-      }
-    }
-  },
-  "07_heun_custom_neg": {
-    "experiment": "07_heun_custom_neg",
-    "summary": {
-      "clip_t": 0.2754,
-      "clip_i": 0.7173,
-      "dino_i": 0.5021,
-      "total_clip": 0.9928
-    },
-    "taxonomy_breakdown": {
-      "Baseline Instance": {
-        "count": 10,
-        "clip_t": 0.2316,
-        "clip_i": 0.7751,
-        "dino_i": 0.7055
-      },
-      "Scene Composition": {
-        "count": 44,
-        "clip_t": 0.2766,
-        "clip_i": 0.7091,
-        "dino_i": 0.4906
-      },
-      "Attribute Binding": {
-        "count": 33,
-        "clip_t": 0.2906,
-        "clip_i": 0.6987,
-        "dino_i": 0.4194
-      },
-      "Style Transfer": {
-        "count": 11,
-        "clip_t": 0.2644,
-        "clip_i": 0.775,
-        "dino_i": 0.6387
-      },
-      "Action Dynamics": {
-        "count": 2,
-        "clip_t": 0.2795,
-        "clip_i": 0.5992,
-        "dino_i": 0.3513
-      }
-    },
-    "per_concept": {
-      "actionfigure_2": {
         "clip_t": 0.2686,
-        "clip_i": 0.6172,
-        "dino_i": 0.4685,
-        "diversity": 0.8656,
-        "total": 0.8859
-      },
-      "decoritems_woodenpot": {
-        "clip_t": 0.3093,
-        "clip_i": 0.6993,
-        "dino_i": 0.475,
-        "diversity": 0.7931,
-        "total": 1.0085
-      },
-      "furniture_sofa2": {
-        "clip_t": 0.2456,
-        "clip_i": 0.7287,
-        "dino_i": 0.6488,
-        "diversity": 0.5886,
-        "total": 0.9743
-      },
-      "instrument_music2": {
-        "clip_t": 0.3103,
-        "clip_i": 0.6772,
-        "dino_i": 0.5678,
-        "diversity": 0.8368,
-        "total": 0.9876
-      },
-      "luggage_backpack1": {
-        "clip_t": 0.2775,
-        "clip_i": 0.7955,
-        "dino_i": 0.4595,
-        "diversity": 0.7171,
-        "total": 1.073
-      },
-      "person_3": {
-        "clip_t": 0.2437,
-        "clip_i": 0.65,
-        "dino_i": 0.1692,
-        "diversity": 0.9561,
-        "total": 0.8936
-      },
-      "pet_cat5": {
-        "clip_t": 0.2756,
-        "clip_i": 0.8125,
-        "dino_i": 0.6463,
-        "diversity": 0.7271,
-        "total": 1.0881
-      },
-      "scene_waterfall": {
-        "clip_t": 0.283,
-        "clip_i": 0.7708,
-        "dino_i": 0.621,
-        "diversity": 0.8053,
-        "total": 1.0538
-      },
-      "transport_tank": {
-        "clip_t": 0.272,
-        "clip_i": 0.6297,
-        "dino_i": 0.3195,
-        "diversity": 0.8995,
-        "total": 0.9017
-      },
-      "wearable_jacket1": {
-        "clip_t": 0.2688,
-        "clip_i": 0.7922,
-        "dino_i": 0.6453,
-        "diversity": 0.6992,
-        "total": 1.061
-      }
-    }
-  },
-  "08_dreambooth_prior_loss": {
-    "experiment": "08_dreambooth_prior_loss",
-    "summary": {
-      "clip_t": 0.2795,
-      "clip_i": 0.687,
-      "dino_i": 0.436,
-      "total_clip": 0.9666
-    },
-    "taxonomy_breakdown": {
-      "Baseline Instance": {
-        "count": 10,
-        "clip_t": 0.2352,
-        "clip_i": 0.7725,
-        "dino_i": 0.6637
-      },
-      "Scene Composition": {
-        "count": 44,
-        "clip_t": 0.2857,
-        "clip_i": 0.6686,
-        "dino_i": 0.395
-      },
-      "Attribute Binding": {
-        "count": 33,
-        "clip_t": 0.2858,
-        "clip_i": 0.6684,
-        "dino_i": 0.3689
+        "clip_i": 0.702,
+        "dino_i": 0.4523
       },
       "Style Transfer": {
         "count": 11,
-        "clip_t": 0.2718,
-        "clip_i": 0.7696,
-        "dino_i": 0.6165
+        "clip_t": 0.2426,
+        "clip_i": 0.7598,
+        "dino_i": 0.6558
       },
       "Action Dynamics": {
         "count": 2,
-        "clip_t": 0.3048,
-        "clip_i": 0.519,
-        "dino_i": 0.3133
+        "clip_t": 0.2692,
+        "clip_i": 0.6173,
+        "dino_i": 0.4653
       }
     },
     "per_concept": {
       "actionfigure_2": {
-        "clip_t": 0.2899,
-        "clip_i": 0.5168,
-        "dino_i": 0.3806,
-        "diversity": 0.8913,
-        "total": 0.8067
+        "clip_t": 0.2457,
+        "clip_i": 0.6138,
+        "dino_i": 0.5101,
+        "diversity": 0.8213,
+        "total": 0.8595
       },
       "decoritems_woodenpot": {
-        "clip_t": 0.3238,
-        "clip_i": 0.6311,
-        "dino_i": 0.2972,
-        "diversity": 0.8478,
-        "total": 0.9549
+        "clip_t": 0.2867,
+        "clip_i": 0.6817,
+        "dino_i": 0.4714,
+        "diversity": 0.6988,
+        "total": 0.9684
       },
       "furniture_sofa2": {
-        "clip_t": 0.2473,
-        "clip_i": 0.7074,
-        "dino_i": 0.5418,
-        "diversity": 0.6317,
-        "total": 0.9547
+        "clip_t": 0.2192,
+        "clip_i": 0.7574,
+        "dino_i": 0.6927,
+        "diversity": 0.3056,
+        "total": 0.9766
       },
       "instrument_music2": {
-        "clip_t": 0.311,
-        "clip_i": 0.6738,
-        "dino_i": 0.5839,
-        "diversity": 0.8236,
-        "total": 0.9848
+        "clip_t": 0.2499,
+        "clip_i": 0.7392,
+        "dino_i": 0.8253,
+        "diversity": 0.6131,
+        "total": 0.9891
       },
       "luggage_backpack1": {
-        "clip_t": 0.2723,
-        "clip_i": 0.7908,
-        "dino_i": 0.4181,
-        "diversity": 0.6931,
-        "total": 1.0631
+        "clip_t": 0.2565,
+        "clip_i": 0.8134,
+        "dino_i": 0.6289,
+        "diversity": 0.6613,
+        "total": 1.0699
       },
       "person_3": {
-        "clip_t": 0.2406,
-        "clip_i": 0.6478,
-        "dino_i": 0.173,
-        "diversity": 0.9655,
-        "total": 0.8884
+        "clip_t": 0.244,
+        "clip_i": 0.6831,
+        "dino_i": 0.1724,
+        "diversity": 0.8556,
+        "total": 0.9272
       },
       "pet_cat5": {
-        "clip_t": 0.2764,
-        "clip_i": 0.7968,
-        "dino_i": 0.5915,
-        "diversity": 0.754,
-        "total": 1.0732
+        "clip_t": 0.2666,
+        "clip_i": 0.8205,
+        "dino_i": 0.551,
+        "diversity": 0.7001,
+        "total": 1.0871
       },
       "scene_waterfall": {
-        "clip_t": 0.2912,
-        "clip_i": 0.7893,
-        "dino_i": 0.6357,
-        "diversity": 0.7454,
-        "total": 1.0805
+        "clip_t": 0.2805,
+        "clip_i": 0.7399,
+        "dino_i": 0.5549,
+        "diversity": 0.7673,
+        "total": 1.0204
       },
       "transport_tank": {
-        "clip_t": 0.2746,
-        "clip_i": 0.5594,
-        "dino_i": 0.1861,
-        "diversity": 0.9014,
-        "total": 0.8341
+        "clip_t": 0.233,
+        "clip_i": 0.6334,
+        "dino_i": 0.3364,
+        "diversity": 0.8537,
+        "total": 0.8664
       },
       "wearable_jacket1": {
-        "clip_t": 0.2682,
-        "clip_i": 0.7571,
-        "dino_i": 0.552,
-        "diversity": 0.7282,
-        "total": 1.0253
-      }
-    }
-  },
-  "09_subject_adaptive_routing": {
-    "experiment": "09_subject_adaptive_routing",
-    "summary": {
-      "clip_t": 0.2797,
-      "clip_i": 0.6839,
-      "dino_i": 0.4257,
-      "total_clip": 0.9635
-    },
-    "taxonomy_breakdown": {
-      "Baseline Instance": {
-        "count": 10,
-        "clip_t": 0.2385,
-        "clip_i": 0.778,
-        "dino_i": 0.645
-      },
-      "Scene Composition": {
-        "count": 44,
-        "clip_t": 0.2838,
-        "clip_i": 0.6664,
-        "dino_i": 0.3892
-      },
-      "Attribute Binding": {
-        "count": 33,
-        "clip_t": 0.2874,
-        "clip_i": 0.666,
-        "dino_i": 0.3563
-      },
-      "Style Transfer": {
-        "count": 11,
-        "clip_t": 0.2724,
-        "clip_i": 0.7519,
-        "dino_i": 0.6012
-      },
-      "Action Dynamics": {
-        "count": 2,
-        "clip_t": 0.3048,
-        "clip_i": 0.519,
-        "dino_i": 0.3133
-      }
-    },
-    "per_concept": {
-      "actionfigure_2": {
-        "clip_t": 0.2899,
-        "clip_i": 0.5168,
-        "dino_i": 0.3806,
-        "diversity": 0.8913,
-        "total": 0.8067
-      },
-      "decoritems_woodenpot": {
-        "clip_t": 0.3218,
-        "clip_i": 0.6401,
-        "dino_i": 0.3035,
-        "diversity": 0.8365,
-        "total": 0.962
-      },
-      "furniture_sofa2": {
-        "clip_t": 0.2463,
-        "clip_i": 0.7019,
-        "dino_i": 0.5329,
-        "diversity": 0.6263,
-        "total": 0.9482
-      },
-      "instrument_music2": {
-        "clip_t": 0.3144,
-        "clip_i": 0.6761,
-        "dino_i": 0.5688,
-        "diversity": 0.7923,
-        "total": 0.9905
-      },
-      "luggage_backpack1": {
-        "clip_t": 0.2748,
-        "clip_i": 0.7707,
-        "dino_i": 0.3917,
-        "diversity": 0.7432,
-        "total": 1.0455
-      },
-      "person_3": {
-        "clip_t": 0.2445,
-        "clip_i": 0.6453,
-        "dino_i": 0.1699,
-        "diversity": 0.9656,
-        "total": 0.8898
-      },
-      "pet_cat5": {
-        "clip_t": 0.2744,
-        "clip_i": 0.7906,
-        "dino_i": 0.5631,
-        "diversity": 0.755,
-        "total": 1.065
-      },
-      "scene_waterfall": {
-        "clip_t": 0.2915,
-        "clip_i": 0.7859,
-        "dino_i": 0.6173,
-        "diversity": 0.7486,
-        "total": 1.0774
-      },
-      "transport_tank": {
-        "clip_t": 0.2625,
-        "clip_i": 0.5687,
-        "dino_i": 0.2039,
-        "diversity": 0.8999,
-        "total": 0.8313
-      },
-      "wearable_jacket1": {
-        "clip_t": 0.2765,
-        "clip_i": 0.7427,
-        "dino_i": 0.5257,
-        "diversity": 0.7388,
-        "total": 1.0192
+        "clip_t": 0.2535,
+        "clip_i": 0.7789,
+        "dino_i": 0.5971,
+        "diversity": 0.6356,
+        "total": 1.0324
       }
     }
   }

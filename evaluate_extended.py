@@ -226,11 +226,11 @@ class ExtendedEvaluator:
     def evaluate_experiment(
         self,
         exp_dir: str,
-        data_base_dir: str = "./data",
+        data_base_dir: str = "./dataset",
     ) -> Dict:
         """한 실험 디렉토리의 전체 10개 서브젝트에 대한 다차원 평가 수행"""
         print(f"\n🔍 [Extended Eval] '{exp_dir}' 정밀 다차원 평가 시작...")
-        concept_dirs = sorted([d for d in os.listdir(exp_dir) if os.path.isdir(os.path.join(exp_dir, d)) and not d.startswith(".")])
+        concept_dirs = sorted([d for d in os.listdir(exp_dir) if d in CLASS_PROMPT and os.path.isdir(os.path.join(exp_dir, d))])
 
         results = {}
         all_clip_t = []
@@ -248,7 +248,12 @@ class ExtendedEvaluator:
             gen_dir = os.path.join(exp_dir, concept)
             ref_dir = os.path.join(data_base_dir, concept)
 
-            gen_img_paths = sorted(glob.glob(os.path.join(gen_dir, "*.png")) + glob.glob(os.path.join(gen_dir, "*.jpg")))
+            raw_gen_paths = glob.glob(os.path.join(gen_dir, "*.png")) + glob.glob(os.path.join(gen_dir, "*.jpg"))
+            # Numerical sort by prompt index (e.g. 0.png ... 9.png)
+            def _sort_key(p):
+                base = os.path.splitext(os.path.basename(p))[0]
+                return int(base) if base.isdigit() else 999
+            gen_img_paths = sorted(raw_gen_paths, key=_sort_key)
             if not gen_img_paths:
                 continue
 
@@ -368,7 +373,7 @@ class ExtendedEvaluator:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp_dir", type=str, default="all", help="특정 실험 디렉토리 또는 'all'")
-    parser.add_argument("--data_dir", type=str, default="./data")
+    parser.add_argument("--data_dir", type=str, default="./dataset")
     args = parser.parse_args()
 
     evaluator = ExtendedEvaluator()

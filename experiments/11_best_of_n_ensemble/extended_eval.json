@@ -1,0 +1,113 @@
+{
+  "experiment": "11_best_of_n_ensemble",
+  "summary": {
+    "clip_t": 0.2536,
+    "clip_i": 0.7261,
+    "dino_i": 0.534,
+    "total_clip": 0.9797
+  },
+  "taxonomy_breakdown": {
+    "Baseline Instance": {
+      "count": 10,
+      "clip_t": 0.2194,
+      "clip_i": 0.7966,
+      "dino_i": 0.6613
+    },
+    "Scene Composition": {
+      "count": 44,
+      "clip_t": 0.2521,
+      "clip_i": 0.7247,
+      "dino_i": 0.539
+    },
+    "Attribute Binding": {
+      "count": 33,
+      "clip_t": 0.2686,
+      "clip_i": 0.702,
+      "dino_i": 0.4523
+    },
+    "Style Transfer": {
+      "count": 11,
+      "clip_t": 0.2426,
+      "clip_i": 0.7598,
+      "dino_i": 0.6558
+    },
+    "Action Dynamics": {
+      "count": 2,
+      "clip_t": 0.2692,
+      "clip_i": 0.6173,
+      "dino_i": 0.4653
+    }
+  },
+  "per_concept": {
+    "actionfigure_2": {
+      "clip_t": 0.2457,
+      "clip_i": 0.6138,
+      "dino_i": 0.5101,
+      "diversity": 0.8213,
+      "total": 0.8595
+    },
+    "decoritems_woodenpot": {
+      "clip_t": 0.2867,
+      "clip_i": 0.6817,
+      "dino_i": 0.4714,
+      "diversity": 0.6988,
+      "total": 0.9684
+    },
+    "furniture_sofa2": {
+      "clip_t": 0.2192,
+      "clip_i": 0.7574,
+      "dino_i": 0.6927,
+      "diversity": 0.3056,
+      "total": 0.9766
+    },
+    "instrument_music2": {
+      "clip_t": 0.2499,
+      "clip_i": 0.7392,
+      "dino_i": 0.8253,
+      "diversity": 0.6131,
+      "total": 0.9891
+    },
+    "luggage_backpack1": {
+      "clip_t": 0.2565,
+      "clip_i": 0.8134,
+      "dino_i": 0.6289,
+      "diversity": 0.6613,
+      "total": 1.0699
+    },
+    "person_3": {
+      "clip_t": 0.244,
+      "clip_i": 0.6831,
+      "dino_i": 0.1724,
+      "diversity": 0.8556,
+      "total": 0.9272
+    },
+    "pet_cat5": {
+      "clip_t": 0.2666,
+      "clip_i": 0.8205,
+      "dino_i": 0.551,
+      "diversity": 0.7001,
+      "total": 1.0871
+    },
+    "scene_waterfall": {
+      "clip_t": 0.2805,
+      "clip_i": 0.7399,
+      "dino_i": 0.5549,
+      "diversity": 0.7673,
+      "total": 1.0204
+    },
+    "transport_tank": {
+      "clip_t": 0.233,
+      "clip_i": 0.6334,
+      "dino_i": 0.3364,
+      "diversity": 0.8537,
+      "total": 0.8664
+    },
+    "wearable_jacket1": {
+      "clip_t": 0.2535,
+      "clip_i": 0.7789,
+      "dino_i": 0.5971,
+      "diversity": 0.6356,
+      "total": 1.0324
+    }
+  }
+}
