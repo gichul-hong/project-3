@@ -14,11 +14,11 @@
     "enable_t5": true,
     "seed": 42
   },
-  "elapsed_seconds": 140.48,
+  "elapsed_seconds": 146.49,
   "average_scores": {
-    "CLIP-T": 0.3274,
-    "CLIP-I": 0.6838,
-    "CLIP-Total": 1.0112
+    "CLIP-T": 0.3268,
+    "CLIP-I": 0.6908,
+    "CLIP-Total": 1.0176
   },
   "per_concept_scores": {
     "actionfigure_2": {
@@ -56,6 +56,10 @@
     "transport_tank": {
       "t2i": 0.2979,
       "i2i": 0.5774
+    },
+    "wearable_jacket1": {
+      "t2i": 0.322,
+      "i2i": 0.7539
     }
   }
 }
