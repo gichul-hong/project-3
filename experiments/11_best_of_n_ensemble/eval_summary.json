@@ -1,49 +1,52 @@
 {
-  "average_scores": {
-    "t2i": 0.3041,
-    "i2i": 0.7561,
-    "total": 1.0602
-  },
   "per_concept_scores": {
     "actionfigure_2": {
       "t2i": 0.3002,
-      "i2i": 0.7069
+      "i2i": 0.7068
     },
     "decoritems_woodenpot": {
       "t2i": 0.3353,
-      "i2i": 0.753
+      "i2i": 0.7529
     },
     "furniture_sofa2": {
       "t2i": 0.2762,
-      "i2i": 0.8505
+      "i2i": 0.8506
     },
     "instrument_music2": {
       "t2i": 0.2911,
-      "i2i": 0.7917
+      "i2i": 0.7918
     },
     "luggage_backpack1": {
-      "t2i": 0.3097,
+      "t2i": 0.3098,
       "i2i": 0.8372
     },
     "person_3": {
-      "t2i": 0.3052,
-      "i2i": 0.6048
+      "t2i": 0.3053,
+      "i2i": 0.6046
     },
     "pet_cat5": {
-      "t2i": 0.3202,
-      "i2i": 0.7771
+      "t2i": 0.3203,
+      "i2i": 0.7772
     },
     "scene_waterfall": {
-      "t2i": 0.3348,
-      "i2i": 0.7759
+      "t2i": 0.3349,
+      "i2i": 0.776
     },
     "transport_tank": {
       "t2i": 0.2713,
       "i2i": 0.6824
     },
     "wearable_jacket1": {
-      "t2i": 0.2965,
+      "t2i": 0.2966,
       "i2i": 0.782
     }
+  },
+  "average_scores": {
+    "CLIP-T": 0.3041,
+    "CLIP-I": 0.7562,
+    "CLIP-Total": 1.0602,
+    "t2i": 0.3041,
+    "i2i": 0.7562,
+    "total": 1.0602
   }
 }
