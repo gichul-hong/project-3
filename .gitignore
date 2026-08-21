@@ -22,7 +22,6 @@ env/
 *.ipynb_checkpoints/
 
 # Model / dataset / generated artifacts (large binaries)
-dataset/
 data/
 augmentation/
 generated/

@@ -63,7 +63,7 @@ def load_scores():
         "08": (e08["average_scores"]["CLIP-T"], e08["average_scores"]["CLIP-I"], e08["average_scores"]["CLIP-Total"]),
         "11": (e11["average_scores"]["t2i"], e11["average_scores"]["i2i"], e11["average_scores"]["total"]),
         "13": (e13["average_scores"]["t2i"], e13["average_scores"]["i2i"], e13["average_scores"]["total"]),
-        "14": (e14["mean_scores"]["t2i"], e14["mean_scores"]["i2i"], e14["mean_scores"]["total"]),
+        "14": (e14["average_scores"]["t2i"], e14["average_scores"]["i2i"], e14["average_scores"]["total"]),
     }, {
         "subjects": subjects,
         "01_per": e01["per_concept_scores"],
