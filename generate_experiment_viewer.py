@@ -1,6 +1,6 @@
 """
-Experiment & Image Comparison Dashboard Generator (Enhanced 3.0 Dual-View)
--------------------------------------------------------------------------
+Experiment & Image Comparison Dashboard Generator (Dual-View: Concept Matrix & Exp 100-Gallery)
+------------------------------------------------------------------------------------------------
 1. Concept Matrix View: 컨셉별로 Exp-01 ~ Exp-14 실험 간 10개 프롬프트 생성 결과 비교
 2. Experiment 100-Image Gallery View: 특정 실험을 선택하여 10개 서브젝트 × 10개 프롬프트 = 100장의 대형 고화질 카드 뷰 제공
 """
@@ -9,6 +9,8 @@ import argparse
 import glob
 import json
 import os
+import http.server
+import socketserver
 from PIL import Image
 
 CLASS_PROMPT = {
@@ -97,13 +99,24 @@ def scan_all(root_dir):
             except Exception:
                 pass
 
-        # selection_*.json 스캔
         data["selection_meta"][exp] = {}
         for sel_file in glob.glob(os.path.join(experiments_dir, exp, "selection_*.json")):
             c_name = os.path.basename(sel_file).replace("selection_", "").replace(".json", "")
             try:
                 with open(sel_file, "r", encoding="utf-8") as f:
-                    data["selection_meta"][exp][c_name] = json.load(f)
+                    raw_s = json.load(f)
+                    if isinstance(raw_s, list):
+                        data["selection_meta"][exp][c_name] = raw_s
+                    elif isinstance(raw_s, dict):
+                        # convert dict to list
+                        converted = []
+                        for k, v in raw_s.items():
+                            idx_num = int(k.replace("p", "")) if k.replace("p", "").isdigit() else None
+                            if idx_num is not None:
+                                item = dict(v)
+                                item["prompt_idx"] = idx_num
+                                converted.append(item)
+                        data["selection_meta"][exp][c_name] = converted
             except Exception:
                 pass
 
@@ -310,12 +323,12 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
         
         <!-- View Mode Switcher -->
         <div class="mode-tab-group">
-            <button class="mode-tab active" id="tabConceptMode" onclick="switchViewMode('concept')">📌 Concept View</button>
-            <button class="mode-tab" id="tabExpMode" onclick="switchViewMode('experiment')">🚀 Exp 100-View</button>
+            <button class="mode-tab active" id="tabExpMode" onclick="switchViewMode('experiment')">🚀 Experiment 100-View</button>
+            <button class="mode-tab" id="tabConceptMode" onclick="switchViewMode('concept')">📌 Concept Matrix</button>
         </div>
 
         <div class="section-label" id="sidebarSectionLabel">
-            <span>CONCEPTS (10개)</span>
+            <span>EXPERIMENTS (12개)</span>
         </div>
         <ul class="nav-list" id="sidebarNav"></ul>
     </div>
@@ -358,7 +371,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
     <script>
         const DATA = __DATA_JSON__;
-        let currentMode = 'concept'; // 'concept' or 'experiment'
+        let currentMode = 'experiment'; // 'experiment' default
         let currentConcept = Object.keys(DATA.concepts)[0];
         let currentExp = DATA.experiments[DATA.experiments.length - 1] || '13_sota_ensemble';
         let selectedExps = [...DATA.experiments];
@@ -366,23 +379,200 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
         let gallerySearchQuery = '';
 
         function init() {
-            switchViewMode('concept');
+            switchViewMode('experiment');
         }
 
         function switchViewMode(mode) {
             currentMode = mode;
-            document.getElementById('tabConceptMode').className = `mode-tab ${mode === 'concept' ? 'active' : ''}`;
             document.getElementById('tabExpMode').className = `mode-tab ${mode === 'experiment' ? 'active' : ''}`;
+            document.getElementById('tabConceptMode').className = `mode-tab ${mode === 'concept' ? 'active' : ''}`;
             
-            if (mode === 'concept') {
-                document.getElementById('sidebarSectionLabel').innerHTML = '<span>CONCEPTS (10개)</span>';
-                renderConceptSidebar();
-                selectConcept(currentConcept);
-            } else {
+            if (mode === 'experiment') {
                 document.getElementById('sidebarSectionLabel').innerHTML = '<span>EXPERIMENTS (' + DATA.experiments.length + '개)</span>';
                 renderExperimentSidebar();
                 selectExperiment(currentExp);
+            } else {
+                document.getElementById('sidebarSectionLabel').innerHTML = '<span>CONCEPTS (10개)</span>';
+                renderConceptSidebar();
+                selectConcept(currentConcept);
             }
+        }
+
+        /* ================================================================= */
+        /* MODE 2: EXPERIMENT SIDEBAR & 100-IMAGE GALLERY VIEW                */
+        /* ================================================================= */
+        function renderExperimentSidebar() {
+            const nav = document.getElementById('sidebarNav');
+            nav.innerHTML = '';
+            
+            DATA.experiments.forEach(exp => {
+                const meta = DATA.exp_meta[exp] || { name: exp, color: '#94a3b8', tag: '-' };
+                const li = document.createElement('li');
+                li.className = 'nav-item';
+                
+                const btn = document.createElement('button');
+                btn.className = `nav-btn ${exp === currentExp ? 'active' : ''}`;
+                btn.onclick = () => selectExperiment(exp);
+                btn.innerHTML = `
+                    <div style="display:flex; flex-direction:column; gap:2px; text-align:left;">
+                        <span style="font-weight:700;">${exp}</span>
+                        <span style="font-size:0.7rem; opacity:0.8; color:${meta.color};">${meta.name}</span>
+                    </div>
+                `;
+                li.appendChild(btn);
+                nav.appendChild(li);
+            });
+        }
+
+        function selectExperiment(exp) {
+            currentExp = exp;
+            renderExperimentSidebar();
+            
+            const meta = DATA.exp_meta[exp] || { name: exp, color: '#38bdf8', tag: '-' };
+            document.getElementById('mainTitle').innerText = meta.name;
+            document.getElementById('mainSubBadge').innerText = `100-Image Matrix (${meta.tag})`;
+            
+            renderExperimentTopControls();
+            renderGalleryContent();
+        }
+
+        function renderExperimentTopControls() {
+            const group = document.getElementById('topControls');
+            group.innerHTML = '';
+            
+            const allBtn = document.createElement('button');
+            allBtn.className = `filter-btn ${galleryConceptFilter === 'ALL' ? 'active' : ''}`;
+            allBtn.innerText = '전체 서브젝트 (100장)';
+            allBtn.onclick = () => {
+                galleryConceptFilter = 'ALL';
+                renderExperimentTopControls();
+                renderGalleryContent();
+            };
+            group.appendChild(allBtn);
+
+            Object.keys(DATA.concepts).forEach(concept => {
+                const btn = document.createElement('button');
+                btn.className = `filter-btn ${galleryConceptFilter === concept ? 'active' : ''}`;
+                btn.innerText = concept;
+                btn.onclick = () => {
+                    galleryConceptFilter = concept;
+                    renderExperimentTopControls();
+                    renderGalleryContent();
+                };
+                group.appendChild(btn);
+            });
+
+            const search = document.createElement('input');
+            search.type = 'text';
+            search.className = 'search-input';
+            search.placeholder = '🔍 프롬프트 실시간 검색...';
+            search.value = gallerySearchQuery;
+            search.oninput = (e) => {
+                gallerySearchQuery = e.target.value.toLowerCase();
+                renderGalleryContent();
+            };
+            group.appendChild(search);
+        }
+
+        function renderGalleryContent() {
+            const area = document.getElementById('contentArea');
+            const exp = currentExp;
+            const meta = DATA.exp_meta[exp] || { name: exp, color: '#38bdf8' };
+
+            let avgT = '-', avgI = '-', avgTot = '-';
+            if (DATA.scores[exp] && DATA.scores[exp].average_scores) {
+                const av = DATA.scores[exp].average_scores;
+                avgT = (av['CLIP-T'] || av.t2i || 0).toFixed(4);
+                avgI = (av['CLIP-I'] || av.i2i || 0).toFixed(4);
+                avgTot = (av['CLIP-Total'] || av.total || (av.t2i + av.i2i) || 0).toFixed(4);
+            }
+
+            let cardsHtml = '';
+            let count = 0;
+
+            Object.keys(DATA.concepts).forEach(concept => {
+                if (galleryConceptFilter !== 'ALL' && galleryConceptFilter !== concept) return;
+
+                const info = DATA.concepts[concept];
+                const prompts = info.prompts;
+                const expImgs = info.exp_generated[exp] || {};
+                const selMetaList = (DATA.selection_meta[exp] && DATA.selection_meta[exp][concept]) || [];
+
+                prompts.forEach((pText, pIdx) => {
+                    if (gallerySearchQuery && !pText.toLowerCase().includes(gallerySearchQuery) && !concept.toLowerCase().includes(gallerySearchQuery)) {
+                        return;
+                    }
+
+                    const imgInfo = expImgs[pIdx];
+                    if (!imgInfo) return;
+
+                    count++;
+                    let t2iStr = '-', i2iStr = '-', totalStr = '-';
+                    const selObj = selMetaList.find(s => s.prompt_idx === pIdx);
+                    if (selObj) {
+                        t2iStr = selObj.clip_t.toFixed(4);
+                        i2iStr = selObj.clip_i.toFixed(4);
+                        totalStr = (selObj.clip_t + selObj.clip_i).toFixed(4);
+                    } else if (DATA.scores[exp] && DATA.scores[exp].per_concept_scores && DATA.scores[exp].per_concept_scores[concept]) {
+                        const cs = DATA.scores[exp].per_concept_scores[concept];
+                        t2iStr = cs.t2i ? cs.t2i.toFixed(4) : '-';
+                        i2iStr = cs.i2i ? cs.i2i.toFixed(4) : '-';
+                        if (cs.t2i && cs.i2i) totalStr = (cs.t2i + cs.i2i).toFixed(4);
+                    }
+
+                    cardsHtml += `
+                        <div class="gallery-card" onclick="openModal('${imgInfo.rel_path}', '${meta.name} - [${concept}]', 'Prompt #${pIdx}: \\'${pText}\\' | T: ${t2iStr}, I: ${i2iStr}')">
+                            <div class="gallery-img-box">
+                                <img src="${imgInfo.rel_path}" loading="lazy" alt="${concept}">
+                            </div>
+                            <div class="gallery-card-body">
+                                <div class="gallery-card-top">
+                                    <span class="gallery-concept-tag">${concept}</span>
+                                    <span class="gallery-idx-tag">#${pIdx}</span>
+                                </div>
+                                <div class="gallery-prompt-text" title="${pText}">
+                                    "${pText}"
+                                </div>
+                                <div class="gallery-score-row">
+                                    <span class="score-pill t2i">T: ${t2iStr}</span>
+                                    <span class="score-pill i2i">I: ${i2iStr}</span>
+                                    <span class="score-pill total">Total: ${totalStr}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+
+            area.innerHTML = `
+                <!-- Summary Banner -->
+                <div class="box" style="background:linear-gradient(135deg, rgba(2, 132, 199, 0.12), rgba(15, 23, 42, 0.6)); border-color:rgba(56, 189, 248, 0.25);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <div style="font-size:1.15rem; font-weight:800; color:var(--text-main);">${meta.name}</div>
+                            <div style="font-size:0.8rem; color:var(--text-sub); margin-top:2px;">알고리즘: <b>${meta.tag}</b></div>
+                        </div>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <div class="score-pill t2i" style="font-size:0.8rem; padding:4px 10px;">공식 CLIP-T: ${avgT}</div>
+                            <div class="score-pill i2i" style="font-size:0.8rem; padding:4px 10px;">공식 CLIP-I: ${avgI}</div>
+                            <div class="score-pill total" style="font-size:0.8rem; padding:4px 10px;">종합 Total: ${avgTot}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 100-Image Gallery -->
+                <div class="box">
+                    <div class="box-header">
+                        <div class="box-title">
+                            <span>🖼️ ${meta.name} 생성 이미지 갤러리</span>
+                            <span class="badge-count">${count}장 표시 중</span>
+                        </div>
+                    </div>
+                    <div class="gallery-grid">
+                        ${cardsHtml || '<div style="color:var(--text-sub); padding:30px;">검색 조건에 맞는 이미지가 없습니다.</div>'}
+                    </div>
+                </div>
+            `;
         }
 
         /* ================================================================= */
@@ -603,7 +793,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 const rowHeader = document.createElement('div');
                 rowHeader.className = 'prompt-row-header';
                 rowHeader.innerHTML = `
-                    <span class="prompt-idx-badge">Prompt #${pIdx}</span>
+                    <span class="prompt-idx-badge">#${pIdx}</span>
                     <span class="prompt-text">${pText}</span>
                 `;
                 row.appendChild(rowHeader);
@@ -614,17 +804,17 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 selectedExps.forEach(exp => {
                     const expImgs = info.exp_generated[exp] || {};
                     const imgInfo = expImgs[pIdx];
-                    const meta = DATA.exp_meta[exp] || { color: '#c084fc' };
+                    const meta = DATA.exp_meta[exp] || { name: exp, color: '#38bdf8' };
 
                     const card = document.createElement('div');
                     card.className = 'exp-card';
 
                     if (imgInfo) {
-                        card.onclick = () => openModal(imgInfo.rel_path, `${exp} - Prompt #${pIdx} (${currentConcept})`, pText);
+                        card.onclick = () => openModal(imgInfo.rel_path, `${meta.name} - Prompt #${pIdx}`, `[${currentConcept}] "${pText}"`);
                         card.innerHTML = `
                             <div class="exp-card-header">
                                 <span style="color:${meta.color};">${exp.replace(/^[0-9]+_/, '')}</span>
-                                <span style="color:var(--accent-cyan);">#${pIdx}</span>
+                                <span style="color:var(--text-muted);">#${pIdx}</span>
                             </div>
                             <div class="exp-img-wrapper">
                                 <img src="${imgInfo.rel_path}" loading="lazy">
@@ -634,10 +824,10 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                         card.innerHTML = `
                             <div class="exp-card-header">
                                 <span>${exp.replace(/^[0-9]+_/, '')}</span>
-                                <span>N/A</span>
+                                <span>-</span>
                             </div>
-                            <div class="exp-img-wrapper" style="display:flex; align-items:center; justify-content:center; color:var(--text-sub); font-size:0.75rem;">
-                                생성 이미지 없음
+                            <div class="exp-img-wrapper" style="display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:0.75rem;">
+                                N/A
                             </div>
                         `;
                     }
@@ -649,193 +839,6 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             });
         }
 
-
-        /* ================================================================= */
-        /* MODE 2: EXPERIMENT 100-IMAGE GALLERY VIEW                         */
-        /* ================================================================= */
-        function renderExperimentSidebar() {
-            const nav = document.getElementById('sidebarNav');
-            nav.innerHTML = '';
-            
-            DATA.experiments.forEach(exp => {
-                const meta = DATA.exp_meta[exp] || { name: exp, color: '#94a3b8', tag: '-' };
-                const li = document.createElement('li');
-                li.className = 'nav-item';
-                
-                let scoreText = '';
-                if (DATA.scores[exp] && DATA.scores[exp].mean_scores) {
-                    const t = DATA.scores[exp].mean_scores.t2i || 0;
-                    const i = DATA.scores[exp].mean_scores.i2i || 0;
-                    scoreText = (t + i).toFixed(4);
-                }
-
-                const btn = document.createElement('button');
-                btn.className = `nav-btn ${exp === currentExp ? 'active' : ''}`;
-                btn.onclick = () => selectExperiment(exp);
-                btn.innerHTML = `
-                    <div>
-                        <div style="font-size:0.83rem;">${exp}</div>
-                        <div style="font-size:0.68rem; opacity:0.75; font-weight:400;">${meta.name.replace(/^[A-Za-z0-9-]+:\s*/, '')}</div>
-                    </div>
-                    ${scoreText ? `<span style="font-size:0.74rem; font-weight:800; color:var(--accent-cyan);">${scoreText}</span>` : ''}
-                `;
-                li.appendChild(btn);
-                nav.appendChild(li);
-            });
-        }
-
-        function selectExperiment(exp) {
-            currentExp = exp;
-            renderExperimentSidebar();
-            
-            const meta = DATA.exp_meta[exp] || { name: exp, color: '#94a3b8', tag: '-' };
-            document.getElementById('mainTitle').innerText = meta.name;
-            
-            let badgeText = meta.tag;
-            if (DATA.scores[exp] && DATA.scores[exp].mean_scores) {
-                const ms = DATA.scores[exp].mean_scores;
-                badgeText += ` | Total: ${(ms.t2i + ms.i2i).toFixed(4)} (T:${ms.t2i.toFixed(4)}, I:${ms.i2i.toFixed(4)})`;
-            }
-            document.getElementById('mainSubBadge').innerText = badgeText;
-            
-            renderExperimentTopControls();
-            renderExperimentGallery();
-        }
-
-        function renderExperimentTopControls() {
-            const group = document.getElementById('topControls');
-            group.innerHTML = '';
-            
-            // Search Input
-            const search = document.createElement('input');
-            search.type = 'text';
-            search.className = 'search-input';
-            search.placeholder = '🔍 프롬프트 / 키워드 검색...';
-            search.value = gallerySearchQuery;
-            search.oninput = (e) => {
-                gallerySearchQuery = e.target.value.toLowerCase();
-                renderExperimentGallery();
-            };
-            group.appendChild(search);
-
-            // Concept Filter Chips
-            const allChip = document.createElement('button');
-            allChip.className = `filter-btn ${galleryConceptFilter === 'ALL' ? 'active' : ''}`;
-            allChip.innerText = '전체 100장 (ALL)';
-            allChip.onclick = () => {
-                galleryConceptFilter = 'ALL';
-                renderExperimentTopControls();
-                renderExperimentGallery();
-            };
-            group.appendChild(allChip);
-
-            Object.keys(DATA.concepts).forEach(concept => {
-                const chip = document.createElement('button');
-                chip.className = `filter-btn ${galleryConceptFilter === concept ? 'active' : ''}`;
-                chip.innerText = concept;
-                chip.onclick = () => {
-                    galleryConceptFilter = concept;
-                    renderExperimentTopControls();
-                    renderExperimentGallery();
-                };
-                group.appendChild(chip);
-            });
-        }
-
-        function renderExperimentGallery() {
-            const area = document.getElementById('contentArea');
-            area.innerHTML = `
-                <div class="box">
-                    <div class="box-header">
-                        <div class="box-title">
-                            <span>🚀 [${currentExp}] 생성 이미지 100장 갤러리 (High-Res 100-View)</span>
-                        </div>
-                        <div style="font-size:0.8rem; color:var(--text-sub);" id="galleryCountLabel"></div>
-                    </div>
-                    <div class="gallery-grid" id="galleryGrid"></div>
-                </div>
-            `;
-
-            const grid = document.getElementById('galleryGrid');
-            grid.innerHTML = '';
-            
-            let totalCards = 0;
-            const expSelMeta = (DATA.selection_meta[currentExp]) || {};
-
-            Object.keys(DATA.concepts).forEach(concept => {
-                if (galleryConceptFilter !== 'ALL' && galleryConceptFilter !== concept) return;
-
-                const cInfo = DATA.concepts[concept];
-                const expImgs = cInfo.exp_generated[currentExp] || {};
-                const prompts = cInfo.prompts || [];
-                const cSelMeta = expSelMeta[concept] || {};
-
-                prompts.forEach((pText, pIdx) => {
-                    if (gallerySearchQuery && !pText.toLowerCase().includes(gallerySearchQuery) && !concept.toLowerCase().includes(gallerySearchQuery)) {
-                        return;
-                    }
-
-                    const imgInfo = expImgs[pIdx];
-                    if (!imgInfo) return;
-
-                    totalCards++;
-                    const card = document.createElement('div');
-                    card.className = 'gallery-card';
-                    card.onclick = () => openModal(
-                        imgInfo.rel_path,
-                        `[${currentExp}] ${concept} - Prompt #${pIdx}`,
-                        `Prompt: "${pText}" | 파일: ${imgInfo.filename} (${imgInfo.width}x${imgInfo.height}, ${imgInfo.size_kb} KB)`
-                    );
-
-                    // Selection / Score Info
-                    let scoreHtml = '';
-                    const pMeta = cSelMeta[`p${pIdx}`];
-                    if (pMeta) {
-                        const ct = pMeta.clip_t !== undefined ? pMeta.clip_t.toFixed(4) : '-';
-                        const ci = pMeta.clip_i !== undefined ? pMeta.clip_i.toFixed(4) : '-';
-                        const tot = (pMeta.clip_t !== undefined && pMeta.clip_i !== undefined) ? (pMeta.clip_t + pMeta.clip_i).toFixed(4) : '-';
-                        scoreHtml = `
-                            <div class="gallery-score-row">
-                                <span class="score-pill t2i">T: ${ct}</span>
-                                <span class="score-pill i2i">I: ${ci}</span>
-                                <span class="score-pill total">Total: ${tot}</span>
-                            </div>
-                        `;
-                    } else {
-                        scoreHtml = `
-                            <div class="gallery-score-row">
-                                <span style="color:var(--text-muted); font-size:0.7rem;">Concept: ${concept}</span>
-                                <span style="color:var(--accent-cyan); font-size:0.7rem;">#${pIdx}</span>
-                            </div>
-                        `;
-                    }
-
-                    card.innerHTML = `
-                        <div class="gallery-img-box">
-                            <img src="${imgInfo.rel_path}" loading="lazy">
-                        </div>
-                        <div class="gallery-card-body">
-                            <div class="gallery-card-top">
-                                <span class="gallery-concept-tag">${concept}</span>
-                                <span class="gallery-idx-tag">Prompt #${pIdx}</span>
-                            </div>
-                            <div class="gallery-prompt-text" title="${pText}">${pText}</div>
-                            ${scoreHtml}
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                });
-            });
-
-            document.getElementById('galleryCountLabel').innerText = `총 ${totalCards}장 렌더링됨`;
-            if (totalCards === 0) {
-                grid.innerHTML = '<div style="color:var(--text-sub); padding:40px; text-align:center; grid-column:1/-1;">해당 필터/검색 조건에 맞는 생성 이미지가 없습니다.</div>';
-            }
-        }
-
-        /* ================================================================= */
-        /* MODAL HANDLERS                                                    */
-        /* ================================================================= */
         function openModal(src, title, meta) {
             document.getElementById('modalImg').src = src;
             document.getElementById('modalTitle').innerText = title;
@@ -868,17 +871,45 @@ def generate_html(data, output_html_path):
     print(f"✓ Dual-View Experiment Viewer HTML이 성공적으로 생성되었습니다: {output_html_path}")
 
 
+def start_server(html_path, host="0.0.0.0", port=8500):
+    root_dir = os.path.dirname(os.path.abspath(html_path))
+    os.chdir(root_dir)
+    
+    handler = http.server.SimpleHTTPRequestHandler
+    httpd = socketserver.TCPServer((host, port), handler)
+    
+    file_name = os.path.basename(html_path)
+    local_url = f"http://localhost:{port}/{file_name}"
+    
+    print(f"\n🚀 대시보드 웹 서버 구동 중:")
+    print(f"  • 접속 URL: {local_url}")
+    print("종료하려면 Ctrl+C를 누르세요.\n")
+    
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("\n서버가 종료되었습니다.")
+        httpd.server_close()
+
+
 def main():
     default_root = os.path.dirname(os.path.abspath(__file__))
     parser = argparse.ArgumentParser(description="Experiment & Generation Dashboard Generator")
     parser.add_argument("--root", type=str, default=default_root, help="프로젝트 루트 폴더")
     parser.add_argument("--out", type=str, default="experiment_viewer.html", help="생성할 HTML 파일명")
+    parser.add_argument("--server", action="store_true", help="생성 후 HTTP 서버 자동 구동")
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="바인딩 호스트 주소")
+    parser.add_argument("--port", type=int, default=8500, help="웹 서버 포트 번호")
+
     args = parser.parse_args()
     
     print("프로젝트 데이터 및 실험 결과 스캔 중...")
     data = scan_all(args.root)
     out_path = os.path.join(args.root, args.out)
     generate_html(data, out_path)
+    
+    if args.server:
+        start_server(out_path, host=args.host, port=args.port)
 
 
 if __name__ == "__main__":
